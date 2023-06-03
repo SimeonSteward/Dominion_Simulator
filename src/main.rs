@@ -3,11 +3,16 @@ mod card;
 use card::{Card, COPPER, ESTATE};
 use rand::seq::SliceRandom;
 
-fn draw<'a>(n: usize, deck: &mut Vec<&'a Card>, hand: &mut Vec<&'a Card>, discard: &mut Vec<&'a Card>) {
+fn draw<'a>(
+    n: usize,
+    deck: &mut Vec<&'a Card>,
+    hand: &mut Vec<&'a Card>,
+    discard: &mut Vec<&'a Card>,
+) {
     if deck.len() > n {
         hand.extend(deck.drain(..n));
     } else {
-        let i:usize = n-deck.len();
+        let i: usize = n - deck.len();
         hand.extend(deck.drain(..deck.len()));
         shuffle(deck, discard);
         hand.extend(deck.drain(..i));
@@ -25,6 +30,11 @@ fn gain<'a>(n: usize, card: &'a Card, discard: &mut Vec<&'a Card>) {
     }
 }
 
+fn cleanup<'a>(deck: &mut Vec<&'a Card>, hand: &mut Vec<&'a Card>, discard: &mut Vec<&'a Card>) {
+    discard.extend(hand.drain(..));
+    draw(5, deck, hand, discard);
+}
+
 fn main() {
     let copper: &Card = &*COPPER;
     let estate: &Card = &*ESTATE;
@@ -36,9 +46,7 @@ fn main() {
     gain(7, copper, &mut discard);
     gain(3, estate, &mut discard);
 
-    draw(5, &mut deck, &mut hand, &mut discard);
-
-    // Access and print the values of the cards in the deck
+    cleanup(&mut deck, &mut hand, &mut discard);
 
     for card in hand {
         print!("{}, ", card.name);
