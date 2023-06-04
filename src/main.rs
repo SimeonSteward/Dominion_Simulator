@@ -1,20 +1,12 @@
 mod card;
 mod player;
+mod utils;
 
 use player::Player;
 
 fn main() {
-    let copper = &*card::COPPER;
-    let estate = &*card::ESTATE;
-
-    let mut player = Player::new();
-
-    player.gain(7, copper);
-    player.gain(3, estate);
-
+    let mut player = Player::new("P1"); //
+    player.initialize();
     player.cleanup();
-
-    for card in &player.hand {
-        print!("{}, ", card.name);
-    }
+    player.cleanup();
 }
