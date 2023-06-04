@@ -1,4 +1,5 @@
 use crate::card::{Card, COPPER, ESTATE};
+use crate::kingdom::{Kingdom};
 use crate::utils::print_cards;
 use rand::seq::SliceRandom;
 
@@ -20,7 +21,8 @@ impl<'a> Player<'a> {
         }
     }
 
-    pub fn initialize(&mut self) {
+    pub fn initialize(&mut self, kingdom: &mut Kingdom) {
+        kingdom.remove_from_supply(&COPPER, 7);
         self.add_to_discard(7, &COPPER);
         self.add_to_discard(3, &ESTATE);
         self.cleanup();

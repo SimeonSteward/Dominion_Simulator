@@ -1,21 +1,24 @@
-use crate::card::{COPPER, SILVER, GOLD, ESTATE, DUCHY, PROVINCE};
+use crate::card::{Card, COPPER, DUCHY, ESTATE, GOLD, PROVINCE, SILVER};
 use crate::supply_pile::SupplyPile;
+use std::collections::HashMap;
 
 pub struct Kingdom<'a> {
-    pub supply_piles: Vec<SupplyPile<'a>>,
+    pub supply_piles: HashMap<&'a Card, SupplyPile<'a>>,
 }
 
 impl<'a> Kingdom<'a> {
     pub fn new() -> Self {
         Kingdom {
-            supply_piles: Vec::new(),
+            supply_piles: HashMap::new(),
         }
     }
 
-    pub fn initialize(&'a mut self) {
+    pub fn initialize(&mut self) {
         macro_rules! add_supply_pile {
             ($self:expr, $card:expr, $count:expr) => {
-                $self.supply_piles.push(SupplyPile::new(&$card, $count));
+                $self
+                    .supply_piles
+                    .insert(&$card, SupplyPile::new(&$card, $count));
             };
         }
         add_supply_pile!(self, COPPER, 60);
@@ -24,5 +27,11 @@ impl<'a> Kingdom<'a> {
         add_supply_pile!(self, ESTATE, 8);
         add_supply_pile!(self, DUCHY, 8);
         add_supply_pile!(self, PROVINCE, 8);
+    }
+
+    pub fn remove_from_supply(&mut self, card: &'a Card, n: u8) {
+        if let Some(supply_pile) = self.supply_piles.get_mut(card) {
+            supply_pile.count -= n;
+        }
     }
 }

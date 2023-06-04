@@ -9,9 +9,12 @@ use kingdom::Kingdom;
 
 fn main() {
     let mut kingdom = Kingdom::new();
-    let mut player = Player::new("P1"); //
     kingdom.initialize();
-    player.initialize();
+    utils::print_kingdom(&kingdom);
+
+    let mut player = Player::new("P1"); //
+    player.initialize(&mut kingdom);
     player.cleanup();
     player.cleanup();
+    utils::print_kingdom(&kingdom);
 }
