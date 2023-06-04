@@ -21,8 +21,8 @@ impl<'a> Player<'a> {
     }
 
     pub fn initialize(&mut self) {
-        self.gain(7, &COPPER);
-        self.gain(3, &ESTATE);
+        self.add_to_discard(7, &COPPER);
+        self.add_to_discard(3, &ESTATE);
         self.cleanup();
     }
 
@@ -47,7 +47,7 @@ impl<'a> Player<'a> {
         self.deck.shuffle(&mut rand::thread_rng());
     }
 
-    pub fn gain(&mut self, n: usize, card: &'a Card) {
+    pub fn add_to_discard(&mut self, n: usize, card: &'a Card) {
         for _ in 0..n {
             self.discard.push(card);
         }
