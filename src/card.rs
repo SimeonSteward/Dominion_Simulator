@@ -1,48 +1,57 @@
 use lazy_static::lazy_static;
 
-#[derive(Default, Debug, Eq, PartialEq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash)]
+pub enum CardType {
+    Treasure {
+        coin: u8,
+    },
+    Action {
+        plus_card: u8,
+        plus_action: u8,
+        plus_buy: u8,
+        plus_coin: u8,
+    },
+    Victory {
+        vp: u8,
+    },
+}
+
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub struct Card {
     pub name: &'static str,
     pub cost: u8,
-    pub vp: u8,
-    pub coin: u8,
-    // type: cardType
+    pub card_type: CardType,
 }
 
 lazy_static! {
     pub static ref COPPER: Card = Card {
         name: "Copper",
-        coin: 1,
-        ..Default::default()
+        cost: 0,
+        card_type: CardType::Treasure { coin: 1 },
     };
     pub static ref SILVER: Card = Card {
         name: "Silver",
-        coin: 2,
         cost: 3,
-        ..Default::default()
+        card_type: CardType::Treasure { coin: 2 },
     };
     pub static ref GOLD: Card = Card {
         name: "Gold",
-        coin: 3,
         cost: 6,
-        ..Default::default()
+        card_type: CardType::Treasure { coin: 3 },
     };
     pub static ref ESTATE: Card = Card {
         name: "Estate",
         cost: 2,
-        vp: 1,
-        ..Default::default()
+        card_type: CardType::Victory { vp: 1 },
     };
     pub static ref DUCHY: Card = Card {
         name: "Duchy",
         cost: 5,
-        vp: 3,
-        ..Default::default()
+        card_type: CardType::Victory { vp: 3 },
     };
     pub static ref PROVINCE: Card = Card {
         name: "Province",
         cost: 8,
-        vp: 6,
-        ..Default::default()
+        card_type: CardType::Victory { vp: 6 },
     };
 }
