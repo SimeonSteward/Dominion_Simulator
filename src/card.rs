@@ -1,23 +1,23 @@
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub enum CardType {
     Treasure {
-        coin: u8,
+        coin: u16,
     },
     Action {
-        plus_card: u8,
-        plus_action: u8,
-        plus_buy: u8,
-        plus_coin: u8,
+        plus_card: u16,
+        plus_action: u16,
+        plus_buy: u16,
+        plus_coin: u16,
     },
     Victory {
-        vp: u8,
+        vp: u16,
     },
 }
 
 #[derive(Debug, Eq, PartialEq, Hash)]
 pub struct Card {
     pub name: &'static str,
-    pub cost: u8,
+    pub cost: u16,
     pub card_type: CardType,
 }
 pub mod constants {

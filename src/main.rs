@@ -15,7 +15,9 @@ fn main() {
 
     let mut player = Player::new("P1"); //
     player.initialize(&mut kingdom);
-    player.cleanup();
-    player.cleanup();
+    player.turn(&mut kingdom);
+    player.turn(&mut kingdom);
+    player.turn(&mut kingdom);
+    player.turn(&mut kingdom);
     utils::print_kingdom(&kingdom);
 }

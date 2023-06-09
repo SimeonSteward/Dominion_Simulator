@@ -1,4 +1,4 @@
-use crate::card::{Card, constants::*};
+use crate::card::{constants::*, Card};
 use crate::supply_pile::SupplyPile;
 use std::collections::HashMap;
 
@@ -29,7 +29,7 @@ impl<'a> Kingdom<'a> {
         add_supply_pile!(self, PROVINCE, 8);
     }
 
-    pub fn remove_from_supply(&mut self, card: &'a Card, n: u8) {
+    pub fn remove_from_supply(&mut self, card: &'a Card, n: u16) {
         if let Some(supply_pile) = self.supply_piles.get_mut(card) {
             supply_pile.count -= n;
         }

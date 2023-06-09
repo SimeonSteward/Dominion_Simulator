@@ -10,21 +10,23 @@ pub trait CardCollectionsTrait {
 impl CardCollectionsTrait for &Vec<&Card> {
     fn print_cards(&self) {
         for card in *self {
-        print!("{}, ", card.name);
+            print!("{}, ", card.name);
         }
     }
 }
-impl CardCollectionsTrait for HashMap<&Card, u8> {
+impl CardCollectionsTrait for HashMap<&Card, u16> {
     fn print_cards(&self) {
         for (card, count) in self.iter() {
-            println!("Card: {}, Count: {}", card.name, count);
+            print!("{} {}s,", count, card.name);
         }
     }
 }
 
 pub fn print_kingdom(kingdom: &Kingdom) {
     for supply_pile in &kingdom.supply_piles {
-        println!("Card: {}, Count: {}", &supply_pile.1.card.name, supply_pile.1.count);
+        println!(
+            "Card: {}, Count: {}",
+            &supply_pile.1.card.name, supply_pile.1.count
+        );
     }
 }
-

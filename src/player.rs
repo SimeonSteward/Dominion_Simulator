@@ -1,15 +1,18 @@
 use crate::card::{constants::*, Card, CardType};
 use crate::kingdom::Kingdom;
-use crate::strategy::{CardCondition, TREASURE_PLAY_PRIORITY};
+use crate::strategy::{CardCondition, BUY_PRIORITY, TREASURE_PLAY_PRIORITY_LIST};
 use crate::utils::CardCollectionsTrait;
 use rand::seq::SliceRandom;
 use std::collections::HashMap;
 
 pub struct Player<'a> {
     pub deck: Vec<&'a Card>,
-    pub hand: HashMap<&'a Card, u8>,
+    pub hand: HashMap<&'a Card, u16>,
     pub discard: Vec<&'a Card>,
     pub name: &'static str,
+    pub actions: u16,
+    pub buys: u16,
+    pub coins: u16,
 }
 
 impl<'a> Player<'a> {
@@ -19,6 +22,9 @@ impl<'a> Player<'a> {
             hand: HashMap::new(),
             discard: Vec::new(),
             name,
+            actions: 0,
+            buys: 0,
+            coins: 0,
         }
     }
 
@@ -27,6 +33,9 @@ impl<'a> Player<'a> {
         self.add_to_discard(&COPPER, 7);
         self.add_to_discard(&ESTATE, 3);
         self.cleanup();
+        self.actions = 1;
+        self.buys = 1;
+        self.coins = 0;
     }
 
     pub fn draw(&mut self, n: usize) {
@@ -57,43 +66,46 @@ impl<'a> Player<'a> {
         self.deck.shuffle(&mut rand::thread_rng());
     }
 
-    pub fn add_to_discard(&mut self, card: &'a Card, n: u8) {
+    pub fn add_to_discard(&mut self, card: &'a Card, n: u16) {
         for _ in 0..n {
             self.discard.push(card);
         }
     }
 
-    pub fn gain(&mut self, n: u8, card: &'a Card, kingdom: &mut Kingdom<'a>) {
+    pub fn gain(&mut self, kingdom: &mut Kingdom<'a>, card: &'a Card, n: u16) {
         kingdom.remove_from_supply(card, n);
         self.add_to_discard(card, n);
-        print!("{} Gains: {} {}", self.name, n, card.name);
+        // print!("{} Gains: {} {}", self.name, n, card.name);
+    }
+
+    pub fn turn(&mut self, kingdom: &mut Kingdom<'a>) {
+        self.action_phase();
+        self.buy_phase(kingdom);
+        self.cleanup();
     }
 
     pub fn action_phase(&mut self) {}
-    pub fn buy_phase(&mut self) {
+    pub fn buy_phase(&mut self, kingdom: &mut Kingdom<'a>) {
         self.play_treasures();
+        self.purchase_phase(kingdom);
     }
 
     pub fn play_treasures(&mut self) {
-        for card_condition in TREASURE_PLAY_PRIORITY.iter() {
-            let card = card_condition.card;
+        for treasure_play_priority in TREASURE_PLAY_PRIORITY_LIST.iter() {
+            let card = treasure_play_priority.card;
 
             let card_from_hand = self.hand.entry(card);
             match card_from_hand {
                 std::collections::hash_map::Entry::Occupied(occupied) => {
                     let num_card_in_hand = *occupied.get();
-                    match &card_condition.condition {
+                    match &treasure_play_priority.condition {
                         Some(condition) => {
                             if condition(self) {
                                 self.play_treasure(card, num_card_in_hand);
-                                self.add_to_discard(card, num_card_in_hand);
-                                self.hand.remove(card);
                             }
                         }
                         None => {
                             self.play_treasure(card, num_card_in_hand);
-                            self.add_to_discard(card, num_card_in_hand);
-                            self.hand.remove(card);
                         }
                     }
                 }
@@ -102,7 +114,53 @@ impl<'a> Player<'a> {
         }
     }
 
-    pub fn play_treasure(&mut self, card: &Card, n: u8) {}
+    pub fn play_treasure(&mut self, card: &'a Card, n: u16) {
+        match card.card_type {
+            CardType::Treasure { coin } => {
+                self.coins += coin * n;
+                println!("{} plays {} {}s", self.name, n, card.name);
+                self.add_to_discard(card, n);
+                self.hand.remove(card); //TODO What if n is not all of the treasure
+            }
+            _ => {
+                println!("ERROR: Tried to play {} as treasure", card.name)
+            }
+        }
+    }
+
+    pub fn purchase_phase(&mut self, kingdom: &mut Kingdom<'a>) {
+        while self.buys > 0 {
+            for buy_priority in BUY_PRIORITY.iter() {
+                if buy_priority.card.cost <= self.coins
+                    && kingdom
+                        .supply_piles
+                        .get(buy_priority.card)
+                        .and_then(|supply_pile| Some(supply_pile.count > 0))
+                        .unwrap_or(false)
+                {
+                    match &buy_priority.condition {
+                        Some(condition) => {
+                            if condition(self) {
+                                self.buy_card(kingdom, buy_priority);
+                                break;
+                            }
+                        }
+                        None => {
+                            self.buy_card(kingdom, buy_priority);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fn buy_card(&mut self, kingdom: &mut Kingdom<'a>, buy_priority: &CardCondition<'a>) {
+        self.coins -= buy_priority.card.cost;
+        self.buys -= 1;
+        self.gain(kingdom, buy_priority.card, 1);
+        println!("{} buys a {}", self.name, buy_priority.card.name);
+    }
 
     pub fn cleanup(&mut self) {
         for (card, count) in self.hand.drain() {
@@ -111,5 +169,8 @@ impl<'a> Player<'a> {
             }
         }
         self.draw(5);
+        self.actions = 1;
+        self.buys = 1;
+        self.coins = 0;
     }
 }
