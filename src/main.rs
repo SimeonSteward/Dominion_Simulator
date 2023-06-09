@@ -3,6 +3,7 @@ mod player;
 mod utils;
 mod kingdom;
 mod supply_pile;
+mod strategy;
 
 use player::Player;
 use kingdom::Kingdom;

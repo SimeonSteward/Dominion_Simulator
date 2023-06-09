@@ -1,4 +1,4 @@
-use crate::card::{Card, COPPER, DUCHY, ESTATE, GOLD, PROVINCE, SILVER};
+use crate::card::{Card, constants::*};
 use crate::supply_pile::SupplyPile;
 use std::collections::HashMap;
 

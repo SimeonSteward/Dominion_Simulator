@@ -1,9 +1,24 @@
 use crate::card::Card;
 use crate::kingdom::Kingdom;
 
-pub fn print_cards(cards: &Vec<&Card>) {
-    for card in cards {
+use std::collections::HashMap;
+
+pub trait CardCollectionsTrait {
+    fn print_cards(&self);
+}
+
+impl CardCollectionsTrait for &Vec<&Card> {
+    fn print_cards(&self) {
+        for card in *self {
         print!("{}, ", card.name);
+        }
+    }
+}
+impl CardCollectionsTrait for HashMap<&Card, u8> {
+    fn print_cards(&self) {
+        for (card, count) in self.iter() {
+            println!("Card: {}, Count: {}", card.name, count);
+        }
     }
 }
 
