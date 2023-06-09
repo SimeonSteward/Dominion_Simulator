@@ -9,7 +9,10 @@ pub struct Player<'a> {
     pub deck: Vec<&'a Card>,
     pub hand: HashMap<&'a Card, u16>,
     pub discard: Vec<&'a Card>,
+    pub cards: HashMap<&'a Card, u16>,
     pub name: &'static str,
+    pub abreviated_name: &'static str,
+    pub turn_number: u16,
     pub actions: u16,
     pub buys: u16,
     pub coins: u16,
@@ -21,7 +24,10 @@ impl<'a> Player<'a> {
             deck: Vec::new(),
             hand: HashMap::new(),
             discard: Vec::new(),
+            cards: HashMap::new(),
             name,
+            abreviated_name: &name[..2],
+            turn_number: 0,
             actions: 0,
             buys: 0,
             coins: 0,
@@ -31,7 +37,9 @@ impl<'a> Player<'a> {
     pub fn initialize(&mut self, kingdom: &mut Kingdom) {
         kingdom.remove_from_supply(&COPPER, 7);
         self.add_to_discard(&COPPER, 7);
+        println!("{} starts with 7 Coppers", self.abreviated_name);
         self.add_to_discard(&ESTATE, 3);
+        println!("{} starts with 3 Estates", self.abreviated_name);
         self.cleanup();
         self.actions = 1;
         self.buys = 1;
@@ -48,7 +56,7 @@ impl<'a> Player<'a> {
             let additional_cards_needed = n - remaining_cards;
             self.add_cards_to_hand(additional_cards_needed);
         }
-        print!("{} Draws: ", self.name);
+        print!("{} Draws: ", self.abreviated_name);
         CardCollectionsTrait::print_cards(&self.hand);
         println!();
     }
@@ -61,7 +69,7 @@ impl<'a> Player<'a> {
     }
 
     pub fn shuffle(&mut self) {
-        println!("{} Shuffles... ", self.name);
+        println!("{} shuffles their deck... ", self.abreviated_name);
         self.deck.extend(self.discard.drain(..));
         self.deck.shuffle(&mut rand::thread_rng());
     }
@@ -70,6 +78,8 @@ impl<'a> Player<'a> {
         for _ in 0..n {
             self.discard.push(card);
         }
+        let count = self.cards.entry(card).or_insert(0);
+        *count += n;
     }
 
     pub fn gain(&mut self, kingdom: &mut Kingdom<'a>, card: &'a Card, n: u16) {
@@ -79,6 +89,8 @@ impl<'a> Player<'a> {
     }
 
     pub fn turn(&mut self, kingdom: &mut Kingdom<'a>) {
+        self.turn_number += 1;
+        println!("\nTurn {} - {}", self.turn_number, self.name);
         self.action_phase();
         self.buy_phase(kingdom);
         self.cleanup();
@@ -152,6 +164,7 @@ impl<'a> Player<'a> {
                     }
                 }
             }
+            break; // If player goes through the entire buy priority list and doesn't want to buy anything, purchasing is over
         }
     }
 
@@ -159,7 +172,7 @@ impl<'a> Player<'a> {
         self.coins -= buy_priority.card.cost;
         self.buys -= 1;
         self.gain(kingdom, buy_priority.card, 1);
-        println!("{} buys a {}", self.name, buy_priority.card.name);
+        println!("{} buys and gains a {}", self.name, buy_priority.card.name);
     }
 
     pub fn cleanup(&mut self) {

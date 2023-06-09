@@ -26,8 +26,14 @@ lazy_static! {
             },
         ]
     };
-    pub static ref BUY_PRIORITY: [CardCondition<'static>; 3] = {
+    pub static ref BUY_PRIORITY: [CardCondition<'static>; 4] = {
         [
+            CardCondition {
+                card: &*PROVINCE,
+                condition: Some(|player: &Player| -> bool {
+                    player.cards.get(&*GOLD).map_or(false, |count| *count >= 2)
+                }),
+            },
             CardCondition {
                 card: &*GOLD,
                 condition: None,
