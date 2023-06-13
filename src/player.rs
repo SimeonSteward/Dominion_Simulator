@@ -129,8 +129,9 @@ impl<'a> Player<'a> {
     }
 
     pub fn play_treasure(&mut self, card: &'a Card, n: u16) {
-        match card.card_type {
-            CardType::Treasure { coin } => {
+        match &card.card_type {
+            CardType::Treasure(treasure_type) => {
+                let coin = treasure_type.coin;
                 self.coins += coin * n;
                 println!("{} plays {} {}s", self.name, n, card.name);
                 self.add_to_discard(card, n);
@@ -188,11 +189,13 @@ impl<'a> Player<'a> {
         self.buys = 1;
         self.coins = 0;
     }
+
     pub fn get_vp (&self) -> u16{
         let mut total_vp: u16 = self.vp_tokens;
         for (card, quantity )in self.cards.iter(){
-            match card.card_type {
-                        CardType::Victory { vp } => {
+            match &card.card_type {
+                        CardType::Victory(victory_type) => {
+                            let vp = victory_type.vp;
                             total_vp += vp * quantity;
                         },
                         _ => {
