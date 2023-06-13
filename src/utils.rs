@@ -22,7 +22,7 @@ impl CardCollectionsTrait for HashMap<&Card, u16> {
     }
 }
 
-pub fn print_kingdom(kingdom: &Kingdom) {
+pub fn _print_kingdom(kingdom: &Kingdom) {
     for supply_pile in &kingdom.supply_piles {
         println!(
             "Card: {}, Count: {}",

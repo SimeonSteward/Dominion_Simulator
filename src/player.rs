@@ -16,6 +16,7 @@ pub struct Player<'a> {
     pub actions: u16,
     pub buys: u16,
     pub coins: u16,
+    pub vp_tokens: u16,
 }
 
 impl<'a> Player<'a> {
@@ -31,6 +32,7 @@ impl<'a> Player<'a> {
             actions: 0,
             buys: 0,
             coins: 0,
+            vp_tokens: 0,
         }
     }
 
@@ -185,5 +187,19 @@ impl<'a> Player<'a> {
         self.actions = 1;
         self.buys = 1;
         self.coins = 0;
+    }
+    pub fn get_vp (&self) -> u16{
+        let mut total_vp: u16 = self.vp_tokens;
+        for (card, quantity )in self.cards.iter(){
+            match card.card_type {
+                        CardType::Victory { vp } => {
+                            total_vp += vp * quantity;
+                        },
+                        _ => {
+                        }
+                    }
+
+        }
+        return total_vp;
     }
 }
