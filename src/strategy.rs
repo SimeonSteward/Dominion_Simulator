@@ -46,7 +46,7 @@ lazy_static! {
             },
         ]
     };
-    pub static ref BUY_PRIORITY: [CardCondition<'static>; 5] = {
+    pub static ref BUY_PRIORITY: [CardCondition<'static>; 6] = {
         [
             CardCondition {
                 card: &*PROVINCE,
@@ -61,7 +61,13 @@ lazy_static! {
             CardCondition {
                 card: &*SMITHY,
                 condition: Some(|player: &Player| -> bool {
-                    player.cards.get(&*SMITHY).map_or(true, |count| *count < 1)
+                    player.cards.get(&*SMITHY).map_or(true, |count| *count < 2)
+                }),
+            },
+            CardCondition {
+                card: &*VILLAGE,
+                condition: Some(|player: &Player| -> bool {
+                    player.cards.get(&*VILLAGE).map_or(true, |count| *count < 2)
                 }),
             },
             CardCondition {

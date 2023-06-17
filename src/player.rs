@@ -174,18 +174,18 @@ impl<'a> Player<'a> {
                         if num_in_hand >= n {
                             *entry.get_mut() -= n;
                         } else {
-                            println!("ERROR: Tried to play {} {}s when not in hand", n, card.name);
+                            eprintln!("ERROR: Tried to play {} {}s when not in hand", n, card.name);
                             std::process::exit(1);
                         }
                     }
                     std::collections::hash_map::Entry::Vacant(_) => {
-                        println!("ERROR: Tried to play {} when not in hand", card.name);
+                        eprintln!("ERROR: Tried to play {} when not in hand", card.name);
                         std::process::exit(1);
                     }
                 }
             }
             _ => {
-                println!("ERROR: Tried to play {} as treasure", card.name)
+                eprintln!("ERROR: Tried to play {} as treasure", card.name)
             }
         }
     }
@@ -207,23 +207,23 @@ impl<'a> Player<'a> {
                             if num_in_hand >= 1 {
                                 *entry.get_mut() -= 1;
                             } else {
-                                println!("ERROR: Tried to play {} when not in hand", card.name);
+                                eprintln!("ERROR: Tried to play {} when not in hand", card.name);
                                 std::process::exit(1);
                             }
                         }
                         std::collections::hash_map::Entry::Vacant(_) => {
-                            println!("ERROR: Tried to play {} when not in hand", card.name);
+                            eprintln!("ERROR: Tried to play {} when not in hand", card.name);
                             std::process::exit(1);
                         }
                     }
                 }
                 _ => {
-                    println!("ERROR: Tried to play {} as action", card.name);
+                    eprintln!("ERROR: Tried to play {} as action", card.name);
                     std::process::exit(1);
                 }
             }
         } else {
-            println!("ERROR: Tried to play {} when out of actions", card.name);
+            eprintln!("ERROR: Tried to play {} when out of actions", card.name);
             std::process::exit(1);
         }
     }
