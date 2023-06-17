@@ -26,7 +26,27 @@ lazy_static! {
             },
         ]
     };
-    pub static ref BUY_PRIORITY: [CardCondition<'static>; 4] = {
+    pub static ref ACTION_PLAY_PRIORITY_LIST: [CardCondition<'static>; 4] = {
+        [
+            CardCondition {
+                card: &*VILLAGE,
+                condition: None,
+            },
+            CardCondition {
+                card: &*MARKET,
+                condition: None,
+            },
+            CardCondition {
+                card: &*FESTIVAL,
+                condition: None,
+            },
+            CardCondition {
+                card: &*SMITHY,
+                condition: None,
+            },
+        ]
+    };
+    pub static ref BUY_PRIORITY: [CardCondition<'static>; 5] = {
         [
             CardCondition {
                 card: &*PROVINCE,
@@ -37,6 +57,12 @@ lazy_static! {
             CardCondition {
                 card: &*GOLD,
                 condition: None,
+            },
+            CardCondition {
+                card: &*SMITHY,
+                condition: Some(|player: &Player| -> bool {
+                    player.cards.get(&*SMITHY).map_or(true, |count| *count < 1)
+                }),
             },
             CardCondition {
                 card: &*SILVER,

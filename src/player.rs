@@ -1,14 +1,16 @@
 use crate::card::{constants::*, Card, CardType};
 use crate::kingdom::Kingdom;
-use crate::strategy::{CardCondition, BUY_PRIORITY, TREASURE_PLAY_PRIORITY_LIST};
-use crate::utils::CardCollectionsTrait;
+use crate::strategy::{
+    CardCondition, ACTION_PLAY_PRIORITY_LIST, BUY_PRIORITY, TREASURE_PLAY_PRIORITY_LIST,
+};
 use rand::seq::SliceRandom;
 use std::collections::HashMap;
 
 pub struct Player<'a> {
     pub deck: Vec<&'a Card>,
-    pub hand: HashMap<&'a Card, u16>,
+    pub cards_in_play: Vec<&'a Card>,
     pub discard: Vec<&'a Card>,
+    pub hand: HashMap<&'a Card, u16>,
     pub cards: HashMap<&'a Card, u16>,
     pub name: &'static str,
     pub abreviated_name: &'static str,
@@ -23,8 +25,9 @@ impl<'a> Player<'a> {
     pub fn new(name: &'static str) -> Self {
         Player {
             deck: Vec::new(),
-            hand: HashMap::new(),
+            cards_in_play: Vec::new(),
             discard: Vec::new(),
+            hand: HashMap::new(),
             cards: HashMap::new(),
             name,
             abreviated_name: &name[..2],
@@ -43,28 +46,28 @@ impl<'a> Player<'a> {
         self.add_to_discard(&ESTATE, 3);
         println!("{} starts with 3 Estates", self.abreviated_name);
         self.cleanup();
-        self.actions = 1;
-        self.buys = 1;
-        self.coins = 0;
     }
 
-    pub fn draw(&mut self, n: usize) {
-        if self.deck.len() >= n {
+    pub fn draw(&mut self, n: u16) {
+        if self.deck.len() as u16 >= n {
             self.add_cards_to_hand(n);
         } else {
-            let remaining_cards = self.deck.len();
+            let remaining_cards = self.deck.len() as u16;
             self.add_cards_to_hand(remaining_cards);
             self.shuffle();
             let additional_cards_needed = n - remaining_cards;
             self.add_cards_to_hand(additional_cards_needed);
         }
-        print!("{} Draws: ", self.abreviated_name);
-        CardCollectionsTrait::print_cards(&self.hand);
         println!();
     }
 
-    fn add_cards_to_hand(&mut self, n: usize) {
-        for card in self.deck.drain(..n) {
+    fn add_cards_to_hand(&mut self, n: u16) {
+        if n == 0 {
+            return;
+        }
+        print!("{} Draws: ", self.abreviated_name);
+        for card in self.deck.drain(..n as usize) {
+            print!("{}, ", card.name);
             let count = self.hand.entry(card).or_insert(0);
             *count += 1;
         }
@@ -98,7 +101,35 @@ impl<'a> Player<'a> {
         self.cleanup();
     }
 
-    pub fn action_phase(&mut self) {}
+    pub fn action_phase(&mut self) {
+        while self.actions >= 1 {
+            for action_play_priority in ACTION_PLAY_PRIORITY_LIST.iter() {
+                let card = action_play_priority.card;
+                let card_from_hand = self.hand.entry(card);
+                match card_from_hand {
+                    std::collections::hash_map::Entry::Occupied(entry) => {
+                        if *entry.get() >= 1 {
+                            match &action_play_priority.condition {
+                                Some(condition) => {
+                                    if condition(self) {
+                                        self.play_action_from_hand(card);
+                                        break;
+                                    }
+                                }
+                                None => {
+                                    self.play_action_from_hand(card);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    std::collections::hash_map::Entry::Vacant(_) => {}
+                }
+            }
+            break;
+        }
+    }
+
     pub fn buy_phase(&mut self, kingdom: &mut Kingdom<'a>) {
         self.play_treasures();
         self.purchase_phase(kingdom);
@@ -115,11 +146,11 @@ impl<'a> Player<'a> {
                     match &treasure_play_priority.condition {
                         Some(condition) => {
                             if condition(self) {
-                                self.play_treasure(card, num_card_in_hand);
+                                self.play_treasure_from_hand(card, num_card_in_hand);
                             }
                         }
                         None => {
-                            self.play_treasure(card, num_card_in_hand);
+                            self.play_treasure_from_hand(card, num_card_in_hand);
                         }
                     }
                 }
@@ -128,18 +159,72 @@ impl<'a> Player<'a> {
         }
     }
 
-    pub fn play_treasure(&mut self, card: &'a Card, n: u16) {
+    pub fn play_treasure_from_hand(&mut self, card: &'a Card, n: u16) {
         match &card.card_type {
             CardType::Treasure(treasure_type) => {
                 let coin = treasure_type.coin;
                 self.coins += coin * n;
                 println!("{} plays {} {}s", self.name, n, card.name);
-                self.add_to_discard(card, n);
-                self.hand.remove(card); //TODO What if n is not all of the treasure
+                for _ in 0..n {
+                    self.cards_in_play.push(card);
+                }
+                match self.hand.entry(card) {
+                    std::collections::hash_map::Entry::Occupied(mut entry) => {
+                        let num_in_hand = *entry.get_mut();
+                        if num_in_hand >= n {
+                            *entry.get_mut() -= n;
+                        } else {
+                            println!("ERROR: Tried to play {} {}s when not in hand", n, card.name);
+                            std::process::exit(1);
+                        }
+                    }
+                    std::collections::hash_map::Entry::Vacant(_) => {
+                        println!("ERROR: Tried to play {} when not in hand", card.name);
+                        std::process::exit(1);
+                    }
+                }
             }
             _ => {
                 println!("ERROR: Tried to play {} as treasure", card.name)
             }
+        }
+    }
+
+    pub fn play_action_from_hand(&mut self, card: &'a Card) {
+        if self.actions >= 1 {
+            match &card.card_type {
+                CardType::Action(action_type) => {
+                    println!("{} plays a {}", self.name, card.name);
+                    self.coins += action_type.plus_coin;
+                    self.buys += action_type.plus_buy;
+                    self.actions -= 1;
+                    self.actions += action_type.plus_action;
+                    self.draw(action_type.plus_card);
+                    self.cards_in_play.push(card);
+                    match self.hand.entry(card) {
+                        std::collections::hash_map::Entry::Occupied(mut entry) => {
+                            let num_in_hand = *entry.get_mut();
+                            if num_in_hand >= 1 {
+                                *entry.get_mut() -= 1;
+                            } else {
+                                println!("ERROR: Tried to play {} when not in hand", card.name);
+                                std::process::exit(1);
+                            }
+                        }
+                        std::collections::hash_map::Entry::Vacant(_) => {
+                            println!("ERROR: Tried to play {} when not in hand", card.name);
+                            std::process::exit(1);
+                        }
+                    }
+                }
+                _ => {
+                    println!("ERROR: Tried to play {} as action", card.name);
+                    std::process::exit(1);
+                }
+            }
+        } else {
+            println!("ERROR: Tried to play {} when out of actions", card.name);
+            std::process::exit(1);
         }
     }
 
@@ -184,24 +269,23 @@ impl<'a> Player<'a> {
                 self.discard.push(card);
             }
         }
+        self.discard.extend(self.cards_in_play.drain(..));
         self.draw(5);
         self.actions = 1;
         self.buys = 1;
         self.coins = 0;
     }
 
-    pub fn get_vp (&self) -> u16{
+    pub fn get_vp(&self) -> u16 {
         let mut total_vp: u16 = self.vp_tokens;
-        for (card, quantity )in self.cards.iter(){
+        for (card, quantity) in self.cards.iter() {
             match &card.card_type {
-                        CardType::Victory(victory_type) => {
-                            let vp = victory_type.vp;
-                            total_vp += vp * quantity;
-                        },
-                        _ => {
-                        }
-                    }
-
+                CardType::Victory(victory_type) => {
+                    let vp = victory_type.vp;
+                    total_vp += vp * quantity;
+                }
+                _ => {}
+            }
         }
         return total_vp;
     }

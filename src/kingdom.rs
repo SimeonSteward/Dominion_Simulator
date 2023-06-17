@@ -35,6 +35,7 @@ impl<'a> Kingdom<'a> {
         add_supply_pile!(self, ESTATE, 8);
         add_supply_pile!(self, DUCHY, 8);
         add_supply_pile!(self, PROVINCE, 8);
+        add_supply_pile!(self, SMITHY, 10);
     }
 
     pub fn remove_from_supply(&mut self, card: &'a Card, n: u16) {

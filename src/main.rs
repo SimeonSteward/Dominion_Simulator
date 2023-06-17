@@ -11,8 +11,8 @@ use player::Player;
 fn main() {
     let mut kingdom = Kingdom::new();
     kingdom.initialize();
-    let mut player_1 = Player::new("Player 1"); //
-    let mut player_2 = Player::new("Player 2"); //
+    let mut player_1 = Player::new("Woodcutter"); //
+    let mut player_2 = Player::new("Adventurer"); //
     player_1.initialize(&mut kingdom);
     player_2.initialize(&mut kingdom);
     while kingdom.game_end != GameOver::IsOver {
