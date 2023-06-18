@@ -7,8 +7,12 @@ mod utils;
 
 use kingdom::{GameOver, Kingdom};
 use player::Player;
-
-fn main() {
+enum GameResult {
+    Win,
+    Tie,
+    Loss,
+}
+fn run_game() -> GameResult {
     let mut kingdom = Kingdom::new();
     kingdom.initialize();
     let mut player_1 = Player::new("Woodcutter"); //
@@ -35,21 +39,45 @@ fn main() {
             player_1.name,
             player_2.name,
         );
+        return GameResult::Tie;
     } else {
         let winner;
         if player_1_vp > player_2_vp {
             winner = &player_1;
+            println!(
+                "{}: {}, {}: {}    {} wins",
+                player_1.name,
+                player_1.get_vp(),
+                player_2.name,
+                player_2.get_vp(),
+                winner.name
+            );
+            return GameResult::Win;
         } else {
-            winner = &player_2
+            winner = &player_2;
+            println!(
+                "{}: {}, {}: {}    {} wins",
+                player_1.name,
+                player_1.get_vp(),
+                player_2.name,
+                player_2.get_vp(),
+                winner.name
+            );
+            return GameResult::Loss;
         };
-
-        println!(
-            "{}: {}, {}: {}    {} wins",
-            player_1.name,
-            player_1.get_vp(),
-            player_2.name,
-            player_2.get_vp(),
-            winner.name
-        );
+    }
+}
+fn main() {
+    let mut wins: u16 = 0;
+    let mut ties: u16 = 0; 
+    let mut losses: u16 = 0;
+    for _ in 1..100 {
+        
+        match run_game(){
+            GameResult::Win => { wins += 1;}
+            GameResult::Tie => { ties += 1;}
+            GameResult::Loss => { losses += 1;}
+        }
+        println!("Wins: {}, Losses: {}, Ties: {}", wins, losses, ties);
     }
 }
