@@ -12,11 +12,11 @@ enum GameResult {
     Tie,
     Loss,
 }
-fn run_game() -> GameResult {
+fn run_game(print_log: bool) -> GameResult {
     let mut kingdom = Kingdom::new();
     kingdom.initialize();
-    let mut player_1 = Player::new("Woodcutter"); //
-    let mut player_2 = Player::new("Adventurer"); //
+    let mut player_1 = Player::new("Woodcutter", false); //
+    let mut player_2 = Player::new("Adventurer", false); //
     player_1.initialize(&mut kingdom);
     player_2.initialize(&mut kingdom);
     while kingdom.game_end != GameOver::IsOver {
@@ -29,55 +29,51 @@ fn run_game() -> GameResult {
 
     let player_1_vp = player_1.get_vp();
     let player_2_vp = player_2.get_vp();
+    let player_1_win: GameResult;
     if player_1_vp == player_2_vp && player_1.turn_number == player_2.turn_number {
-        println!(
-            "{}: {}, {}: {}  {} and {} tie",
-            player_1.name,
-            player_1.get_vp(),
-            player_2.name,
-            player_2.get_vp(),
-            player_1.name,
-            player_2.name,
-        );
-        return GameResult::Tie;
+        player_1_win = GameResult::Tie;
     } else {
-        let winner;
         if player_1_vp > player_2_vp {
-            winner = &player_1;
-            println!(
-                "{}: {}, {}: {}    {} wins",
-                player_1.name,
-                player_1.get_vp(),
-                player_2.name,
-                player_2.get_vp(),
-                winner.name
-            );
-            return GameResult::Win;
+            player_1_win = GameResult::Win;
         } else {
-            winner = &player_2;
-            println!(
-                "{}: {}, {}: {}    {} wins",
-                player_1.name,
-                player_1.get_vp(),
-                player_2.name,
-                player_2.get_vp(),
-                winner.name
-            );
-            return GameResult::Loss;
+            player_1_win = GameResult::Loss;
         };
     }
+    if print_log {
+        let verb;
+        match player_1_win {
+            GameResult::Win => verb = "wins agaist",
+            GameResult::Tie => verb = "ties with",
+            GameResult::Loss => verb = "loses to",
+        }
+        println!(
+            "{}: {} {} {}: {}",
+            player_1.name,
+            player_1.get_vp(),
+            verb,
+            player_2.name,
+            player_2.get_vp(),
+        );
+    }
+
+    return player_1_win;
 }
 fn main() {
     let mut wins: u16 = 0;
-    let mut ties: u16 = 0; 
+    let mut ties: u16 = 0;
     let mut losses: u16 = 0;
-    for _ in 1..100 {
-        
-        match run_game(){
-            GameResult::Win => { wins += 1;}
-            GameResult::Tie => { ties += 1;}
-            GameResult::Loss => { losses += 1;}
+    for _ in 1..10000 {
+        match run_game(false) {
+            GameResult::Win => {
+                wins += 1;
+            }
+            GameResult::Tie => {
+                ties += 1;
+            }
+            GameResult::Loss => {
+                losses += 1;
+            }
         }
-        println!("Wins: {}, Losses: {}, Ties: {}", wins, losses, ties);
     }
+    println!("Wins: {}, Losses: {}, Ties: {}", wins, losses, ties);
 }

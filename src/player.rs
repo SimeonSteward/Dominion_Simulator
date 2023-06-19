@@ -7,6 +7,7 @@ use rand::seq::SliceRandom;
 use std::collections::HashMap;
 
 pub struct Player<'a> {
+    pub print_log: bool,
     pub deck: Vec<&'a Card>,
     pub cards_in_play: Vec<&'a Card>,
     pub discard: Vec<&'a Card>,
@@ -22,8 +23,9 @@ pub struct Player<'a> {
 }
 
 impl<'a> Player<'a> {
-    pub fn new(name: &'static str) -> Self {
+    pub fn new(name: &'static str, print_log: bool) -> Self {
         Player {
+            print_log,
             deck: Vec::new(),
             cards_in_play: Vec::new(),
             discard: Vec::new(),
@@ -42,9 +44,11 @@ impl<'a> Player<'a> {
     pub fn initialize(&mut self, kingdom: &mut Kingdom) {
         kingdom.remove_from_supply(&COPPER, 7);
         self.add_to_discard(&COPPER, 7);
-        println!("{} starts with 7 Coppers", self.abreviated_name);
         self.add_to_discard(&ESTATE, 3);
-        println!("{} starts with 3 Estates", self.abreviated_name);
+        if self.print_log {
+            println!("{} starts with 7 Coppers", self.abreviated_name);
+            println!("{} starts with 3 Estates", self.abreviated_name);
+        }
         self.cleanup();
     }
 
@@ -58,23 +62,31 @@ impl<'a> Player<'a> {
             let additional_cards_needed = n - remaining_cards;
             self.add_cards_to_hand(additional_cards_needed);
         }
-        println!();
+        if self.print_log {
+            println!();
+        }
     }
 
     fn add_cards_to_hand(&mut self, n: u16) {
         if n == 0 {
             return;
         }
-        print!("{} Draws: ", self.abreviated_name);
+        if self.print_log {
+            print!("{} Draws: ", self.abreviated_name);
+        }
         for card in self.deck.drain(..n as usize) {
-            print!("{}, ", card.name);
+            if self.print_log {
+                print!("{}, ", card.name);
+            }
             let count = self.hand.entry(card).or_insert(0);
             *count += 1;
         }
     }
 
     pub fn shuffle(&mut self) {
-        println!("{} shuffles their deck... ", self.abreviated_name);
+        if self.print_log {
+            println!("{} shuffles their deck... ", self.abreviated_name);
+        }
         self.deck.extend(self.discard.drain(..));
         self.deck.shuffle(&mut rand::thread_rng());
     }
@@ -95,7 +107,9 @@ impl<'a> Player<'a> {
 
     pub fn turn(&mut self, kingdom: &mut Kingdom<'a>) {
         self.turn_number += 1;
-        println!("\nTurn {} - {}", self.turn_number, self.name);
+        if self.print_log {
+            println!("\nTurn {} - {}", self.turn_number, self.name);
+        }
         self.action_phase();
         self.buy_phase(kingdom);
         self.cleanup();
@@ -164,7 +178,9 @@ impl<'a> Player<'a> {
             CardType::Treasure(treasure_type) => {
                 let coin = treasure_type.coin;
                 self.coins += coin * n;
-                println!("{} plays {} {}s", self.name, n, card.name);
+                if self.print_log {
+                    println!("{} plays {} {}s", self.name, n, card.name);
+                }
                 for _ in 0..n {
                     self.cards_in_play.push(card);
                 }
@@ -194,7 +210,9 @@ impl<'a> Player<'a> {
         if self.actions >= 1 {
             match &card.card_type {
                 CardType::Action(action_type) => {
-                    println!("{} plays a {}", self.name, card.name);
+                    if self.print_log {
+                        println!("{} plays a {}", self.name, card.name);
+                    }
                     self.coins += action_type.plus_coin;
                     self.buys += action_type.plus_buy;
                     self.actions -= 1;
@@ -260,7 +278,9 @@ impl<'a> Player<'a> {
         self.coins -= buy_priority.card.cost;
         self.buys -= 1;
         self.gain(kingdom, buy_priority.card, 1);
-        println!("{} buys and gains a {}", self.name, buy_priority.card.name);
+        if self.print_log {
+            println!("{} buys and gains a {}", self.name, buy_priority.card.name);
+        }
     }
 
     pub fn cleanup(&mut self) {
