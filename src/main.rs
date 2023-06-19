@@ -7,6 +7,9 @@ mod utils;
 
 use kingdom::{GameOver, Kingdom};
 use player::Player;
+use std::sync::{Arc, Mutex};
+use std::thread;
+use std::time::Instant;
 enum GameResult {
     Win,
     Tie,
@@ -58,10 +61,14 @@ fn run_game(print_log: bool) -> GameResult {
 
     return player_1_win;
 }
-fn main() {
+
+fn single_treaded() {
+    let start_time = Instant::now();
+
     let mut wins: u16 = 0;
     let mut ties: u16 = 0;
     let mut losses: u16 = 0;
+    
     for _ in 1..10000 {
         match run_game(false) {
             GameResult::Win => {
@@ -75,5 +82,55 @@ fn main() {
             }
         }
     }
+    let elapsed_time = start_time.elapsed();
     println!("Wins: {}, Losses: {}, Ties: {}", wins, losses, ties);
+    println!("Elapsed time: {:?}", elapsed_time);
+}
+
+fn multi_threaded() {
+    let wins = Arc::new(Mutex::new(0));
+    let ties = Arc::new(Mutex::new(0));
+    let losses = Arc::new(Mutex::new(0));
+
+    let mut handles = vec![];
+
+    let start_time = Instant::now();
+    for _ in 1..10000 {
+        let wins = Arc::clone(&wins);
+        let ties = Arc::clone(&ties);
+        let losses = Arc::clone(&losses);
+
+        let handle = thread::spawn(move || match run_game(false) {
+            GameResult::Win => {
+                *wins.lock().unwrap() += 1;
+            }
+            GameResult::Tie => {
+                *ties.lock().unwrap() += 1;
+            }
+            GameResult::Loss => {
+                *losses.lock().unwrap() += 1;
+            }
+        });
+
+        handles.push(handle);
+    }
+
+    for handle in handles {
+        handle.join().unwrap();
+    }
+
+    let elapsed_time = start_time.elapsed();
+    println!(
+        "Wins: {}, Losses: {}, Ties: {}",
+        *wins.lock().unwrap(),
+        *losses.lock().unwrap(),
+        *ties.lock().unwrap()
+    );
+    println!("Elapsed time: {:?}", elapsed_time);
+}
+
+
+fn main() {
+    single_treaded();
+    multi_threaded();
 }
