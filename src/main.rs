@@ -4,9 +4,9 @@ mod player;
 mod strategy;
 mod supply_pile;
 mod utils;
-
 use kingdom::{GameOver, Kingdom};
 use player::Player;
+use std::sync::atomic::AtomicUsize;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Instant;
@@ -35,20 +35,18 @@ fn run_game(print_log: bool) -> GameResult {
     let player_1_win: GameResult;
     if player_1_vp == player_2_vp && player_1.turn_number == player_2.turn_number {
         player_1_win = GameResult::Tie;
+    } else if player_1_vp > player_2_vp {
+        player_1_win = GameResult::Win;
     } else {
-        if player_1_vp > player_2_vp {
-            player_1_win = GameResult::Win;
-        } else {
-            player_1_win = GameResult::Loss;
-        };
+        player_1_win = GameResult::Loss;
     }
     if print_log {
-        let verb;
-        match player_1_win {
-            GameResult::Win => verb = "wins agaist",
-            GameResult::Tie => verb = "ties with",
-            GameResult::Loss => verb = "loses to",
-        }
+        
+        let verb = match player_1_win {
+            GameResult::Win => "wins agaist",
+            GameResult::Tie => "ties with",
+            GameResult::Loss => "loses to",
+        };
         println!(
             "{}: {} {} {}: {}",
             player_1.name,
@@ -59,7 +57,7 @@ fn run_game(print_log: bool) -> GameResult {
         );
     }
 
-    return player_1_win;
+    player_1_win
 }
 
 fn single_treaded() {
@@ -68,7 +66,7 @@ fn single_treaded() {
     let mut wins: u16 = 0;
     let mut ties: u16 = 0;
     let mut losses: u16 = 0;
-    
+
     for _ in 1..10000 {
         match run_game(false) {
             GameResult::Win => {
@@ -92,7 +90,7 @@ fn multi_threaded() {
     let ties = Arc::new(Mutex::new(0));
     let losses = Arc::new(Mutex::new(0));
 
-    let mut handles = vec![];
+    let mut handles = Vec::new();
 
     let start_time = Instant::now();
     for _ in 1..10000 {
@@ -129,8 +127,53 @@ fn multi_threaded() {
     println!("Elapsed time: {:?}", elapsed_time);
 }
 
+#[tokio::main]
+async fn multi_threaded_tokio() {
+    let wins = Arc::new(AtomicUsize::new(0));
+    let ties = Arc::new(AtomicUsize::new(0));
+    let losses = Arc::new(AtomicUsize::new(0));
+
+    let mut tasks = vec![];
+
+    let start_time = Instant::now();
+    for _ in 1..10000 {
+        let wins = Arc::clone(&wins);
+        let ties = Arc::clone(&ties);
+        let losses = Arc::clone(&losses);
+
+        let task = tokio::task::spawn(async move {
+            match run_game(false) {
+                GameResult::Win => {
+                    wins.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                }
+                GameResult::Tie => {
+                    ties.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                }
+                GameResult::Loss => {
+                    losses.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                }
+            }
+        });
+
+        tasks.push(task);
+    }
+
+    for task in tasks {
+        task.await.unwrap();
+    }
+
+    let elapsed_time = start_time.elapsed();
+    println!(
+        "Wins: {}, Losses: {}, Ties: {}",
+        wins.load(std::sync::atomic::Ordering::Relaxed),
+        losses.load(std::sync::atomic::Ordering::Relaxed),
+        ties.load(std::sync::atomic::Ordering::Relaxed)
+    );
+    println!("Elapsed time: {:?}", elapsed_time);
+}
 
 fn main() {
     single_treaded();
     multi_threaded();
+    multi_threaded_tokio();
 }

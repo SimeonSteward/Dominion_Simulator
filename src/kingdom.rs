@@ -43,7 +43,7 @@ impl<'a> Kingdom<'a> {
         if let Some(supply_pile) = self.supply_piles.get_mut(card) {
             supply_pile.count -= n;
             if supply_pile.count == 0 {
-                if *supply_pile.card == *PROVINCE{
+                if *supply_pile.card == *PROVINCE {
                     self.game_end = GameOver::IsOver;
                 }
                 match self.game_end {

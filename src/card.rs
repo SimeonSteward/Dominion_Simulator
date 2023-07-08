@@ -5,12 +5,12 @@ pub enum CardType {
     Victory(VictoryType),
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Default)]
 pub struct TreasureType {
     pub coin: u16,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Default)]
 pub struct ActionType {
     pub plus_card: u16,
     pub plus_action: u16,
@@ -18,32 +18,9 @@ pub struct ActionType {
     pub plus_coin: u16,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Default)]
 pub struct VictoryType {
     pub vp: u16,
-}
-
-impl Default for TreasureType {
-    fn default() -> Self {
-        TreasureType { coin: 0 }
-    }
-}
-
-impl Default for ActionType {
-    fn default() -> Self {
-        ActionType {
-            plus_card: 0,
-            plus_action: 0,
-            plus_buy: 0,
-            plus_coin: 0,
-        }
-    }
-}
-
-impl Default for VictoryType {
-    fn default() -> Self {
-        VictoryType { vp: 0 }
-    }
 }
 
 impl Default for CardType {
@@ -58,7 +35,10 @@ pub struct Card {
     pub cost: u16,
     pub card_type: CardType,
 }
+
 pub mod constants {
+    use std::{collections::HashMap, hash::Hash};
+
     use crate::card::{Card, CardType};
     use lazy_static::lazy_static;
     lazy_static! {
@@ -157,5 +137,29 @@ pub mod constants {
                 ..Default::default()
             }),
         };
+
+       pub static ref CARD_MAP: HashMap<String, &'static Card> = {
+    let mut map = HashMap::<String, &'static Card>::new();
+
+    macro_rules! add_card {
+        ($card:expr) => {
+            map.insert($card.name.to_string(), &$card);
+        };
+    }
+
+    add_card!(PROVINCE);
+    add_card!(DUCHY);
+    add_card!(ESTATE);
+    add_card!(GOLD);
+    add_card!(SILVER);
+    add_card!(COPPER);
+    add_card!(VILLAGE);
+    add_card!(SMITHY);
+    add_card!(MARKET);
+    add_card!(FESTIVAL);
+    add_card!(LABORATORY);
+
+    map
+};
     }
 }

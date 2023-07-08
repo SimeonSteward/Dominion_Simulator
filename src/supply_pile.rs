@@ -9,4 +9,3 @@ impl<'a> SupplyPile<'a> {
         SupplyPile { card, count }
     }
 }
-
