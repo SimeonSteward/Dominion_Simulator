@@ -1,16 +1,20 @@
-#[derive(Debug, PartialEq, Eq, Hash)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum CardType {
     Treasure(TreasureType),
     Action(ActionType),
     Victory(VictoryType),
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Default)]
+#[non_exhaustive]
+#[derive(Debug, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
 pub struct TreasureType {
     pub coin: u16,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Default)]
+#[non_exhaustive]
+#[derive(Debug, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
 pub struct ActionType {
     pub plus_card: u16,
     pub plus_action: u16,
@@ -18,7 +22,8 @@ pub struct ActionType {
     pub plus_coin: u16,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Default)]
+#[non_exhaustive]
+#[derive(Debug, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
 pub struct VictoryType {
     pub vp: u16,
 }
@@ -29,7 +34,7 @@ impl Default for CardType {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Hash)]
+#[derive(Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct Card {
     pub name: &'static str,
     pub cost: u16,
@@ -37,7 +42,7 @@ pub struct Card {
 }
 
 pub mod constants {
-    use std::{collections::HashMap, hash::Hash};
+    use std::collections::HashMap;
 
     use crate::card::{Card, CardType};
     use lazy_static::lazy_static;
@@ -137,29 +142,28 @@ pub mod constants {
                 ..Default::default()
             }),
         };
+        pub static ref CARD_MAP: HashMap<String, &'static Card> = {
+            let mut map = HashMap::<String, &'static Card>::new();
 
-       pub static ref CARD_MAP: HashMap<String, &'static Card> = {
-    let mut map = HashMap::<String, &'static Card>::new();
+            macro_rules! add_card {
+                ($card:expr) => {
+                    map.insert($card.name.to_string(), &$card);
+                };
+            }
 
-    macro_rules! add_card {
-        ($card:expr) => {
-            map.insert($card.name.to_string(), &$card);
+            add_card!(PROVINCE);
+            add_card!(DUCHY);
+            add_card!(ESTATE);
+            add_card!(GOLD);
+            add_card!(SILVER);
+            add_card!(COPPER);
+            add_card!(VILLAGE);
+            add_card!(SMITHY);
+            add_card!(MARKET);
+            add_card!(FESTIVAL);
+            add_card!(LABORATORY);
+
+            map
         };
-    }
-
-    add_card!(PROVINCE);
-    add_card!(DUCHY);
-    add_card!(ESTATE);
-    add_card!(GOLD);
-    add_card!(SILVER);
-    add_card!(COPPER);
-    add_card!(VILLAGE);
-    add_card!(SMITHY);
-    add_card!(MARKET);
-    add_card!(FESTIVAL);
-    add_card!(LABORATORY);
-
-    map
-};
     }
 }

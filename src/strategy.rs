@@ -1,5 +1,5 @@
 use crate::{
-    card::{constants::*, Card},
+    card::{constants::*, Card, CardType},
     player::Player,
 };
 use lazy_static::lazy_static;
@@ -8,6 +8,43 @@ use serde::{Deserialize, Serialize};
 pub struct CardCondition<'a> {
     pub card: &'a Card,
     pub condition: Option<fn(&Player) -> bool>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub enum ConditionType {
+    GreaterThan,
+    GreaterThanOrEqualTo,
+    LessThan,
+    LessThanOrEqualTo,
+    EqualTo,
+    NotEqualTo,
+}
+
+#[derive(Serialize, Deserialize)]
+pub enum ConditionValue {
+    Int(u16),
+    CountInDeck(String),
+    CountTypeInDeck(CardType),
+    CountInSupply(String),
+    CountAllCardsInDeck,
+    CountVp,
+    CountOpponentVp,
+    // Plus{
+    //     first: &'a ConditionValue<'a>,
+    //     second: &'a ConditionValue<'a>
+    // }
+}
+#[derive(Serialize, Deserialize)]
+pub struct Condition {
+    condition_type: ConditionType,
+    first: ConditionValue,
+    second: ConditionValue,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct NameCondition {
+    name: String,
+    condition: Condition,
 }
 
 lazy_static! {
@@ -95,6 +132,25 @@ lazy_static! {
     };
 }
 
-// pub fn getBuyPriority() -> Vec<CardCondition> {}
+pub fn get_buy_priority<'a>(path: String) -> Result<Vec<NameCondition>, std::io::Error> {
+    // Open the file in read-only mode with buffer.
+    let file = std::fs::File::open(path)?;
+    let reader = std::io::BufReader::new(file);
+    // Read the JSON contents of the file as an instance of `User`.
+    let conds = serde_json::from_reader(reader)?;
+    Ok(conds)
+}
 
-// pub fn saveBuyPriority(buy_priority: Vec<CardCondition>, name: std::string::String) {}
+pub fn save_buy_priority(
+    buy_priority: Vec<NameCondition>,
+    name: String,
+) -> Result<(), std::io::Error> {
+    let mut file = match std::fs::File::create(name) {
+        Ok(it) => it,
+        Err(err) => return Err(err),
+    };
+    let buy_priority_str = serde_json::to_string(&buy_priority)?;
+    let buy_priority_buf = buy_priority_str.as_bytes();
+    std::io::Write::write_all(&mut file, buy_priority_buf)?;
+    Ok(())
+}
