@@ -1,7 +1,7 @@
 use crate::card::{constants::*, Card, CardType};
 use crate::kingdom::Kingdom;
 use crate::strategy::{
-    CardCondition, ACTION_PLAY_PRIORITY_LIST, BUY_PRIORITY, TREASURE_PLAY_PRIORITY_LIST,
+    CardCondition, ACTION_PLAY_PRIORITY_LIST, DEFAULT_BUY_PRIORITY, TREASURE_PLAY_PRIORITY_LIST,
 };
 use rand::seq::SliceRandom;
 use std::collections::HashMap;
@@ -20,10 +20,15 @@ pub struct Player<'a> {
     pub buys: u16,
     pub coins: u16,
     pub vp_tokens: u16,
+    pub buy_priorities: Vec<CardCondition<'a>>,
 }
 
 impl<'a> Player<'a> {
-    pub fn new(name: &'static str, print_log: bool) -> Self {
+    pub fn new(
+        name: &'static str,
+        print_log: bool,
+        buy_priorities: Vec<CardCondition<'a>>,
+    ) -> Self {
         Player {
             print_log,
             deck: Vec::new(),
@@ -38,6 +43,7 @@ impl<'a> Player<'a> {
             buys: 0,
             coins: 0,
             vp_tokens: 0,
+            buy_priorities,
         }
     }
 
@@ -87,7 +93,7 @@ impl<'a> Player<'a> {
         if self.print_log {
             println!("{} shuffles their deck... ", self.abreviated_name);
         }
-        self.deck.extend(self.discard.drain(..));
+        self.deck.append(&mut self.discard);
         self.deck.shuffle(&mut rand::thread_rng());
     }
 
@@ -116,25 +122,15 @@ impl<'a> Player<'a> {
     }
 
     pub fn action_phase(&mut self) {
-        while self.actions >= 1 {
+        'actions_left: while self.actions >= 1 {
             for action_play_priority in ACTION_PLAY_PRIORITY_LIST.iter() {
                 let card = action_play_priority.card;
                 let card_from_hand = self.hand.entry(card);
                 match card_from_hand {
                     std::collections::hash_map::Entry::Occupied(entry) => {
-                        if *entry.get() >= 1 {
-                            match &action_play_priority.condition {
-                                Some(condition) => {
-                                    if condition(self) {
-                                        self.play_action_from_hand(card);
-                                        break;
-                                    }
-                                }
-                                None => {
-                                    self.play_action_from_hand(card);
-                                    break;
-                                }
-                            }
+                        if *entry.get() >= 1 && (action_play_priority.condition)(self) {
+                            self.play_action_from_hand(card);
+                            continue 'actions_left;
                         }
                     }
                     std::collections::hash_map::Entry::Vacant(_) => {}
@@ -157,15 +153,8 @@ impl<'a> Player<'a> {
             match card_from_hand {
                 std::collections::hash_map::Entry::Occupied(occupied) => {
                     let num_card_in_hand = *occupied.get();
-                    match &treasure_play_priority.condition {
-                        Some(condition) => {
-                            if condition(self) {
-                                self.play_treasure_from_hand(card, num_card_in_hand);
-                            }
-                        }
-                        None => {
-                            self.play_treasure_from_hand(card, num_card_in_hand);
-                        }
+                    if (treasure_play_priority.condition)(self) {
+                        self.play_treasure_from_hand(card, num_card_in_hand);
                     }
                 }
                 std::collections::hash_map::Entry::Vacant(_) => {}
@@ -248,29 +237,15 @@ impl<'a> Player<'a> {
 
     pub fn purchase_phase(&mut self, kingdom: &mut Kingdom<'a>) {
         while self.buys > 0 {
-            for buy_priority in BUY_PRIORITY.iter() {
-                if buy_priority.card.cost <= self.coins
-                    && kingdom
+            'priority: for buy_priority in DEFAULT_BUY_PRIORITY.iter() {
+                if buy_priority.card.cost <= self.coins && kingdom
                         .supply_piles
-                        .get(buy_priority.card)
-                        .and_then(|supply_pile| Some(supply_pile.count > 0))
-                        .unwrap_or(false)
-                {
-                    match &buy_priority.condition {
-                        Some(condition) => {
-                            if condition(self) {
-                                self.buy_card(kingdom, buy_priority);
-                                break;
-                            }
-                        }
-                        None => {
-                            self.buy_card(kingdom, buy_priority);
-                            break;
-                        }
-                    }
+                        .get(buy_priority.card).map(|supply_pile| supply_pile.count > 0)
+                        .unwrap_or(false) && (buy_priority.condition)(self) {
+                    self.buy_card(kingdom, buy_priority);
+                    break 'priority;
                 }
             }
-            break; // If player goes through the entire buy priority list and doesn't want to buy anything, purchasing is over
         }
     }
 
@@ -289,7 +264,7 @@ impl<'a> Player<'a> {
                 self.discard.push(card);
             }
         }
-        self.discard.extend(self.cards_in_play.drain(..));
+        self.discard.append(&mut self.cards_in_play);
         self.draw(5);
         self.actions = 1;
         self.buys = 1;
@@ -299,14 +274,11 @@ impl<'a> Player<'a> {
     pub fn get_vp(&self) -> u16 {
         let mut total_vp: u16 = self.vp_tokens;
         for (card, quantity) in self.cards.iter() {
-            match &card.card_type {
-                CardType::Victory(victory_type) => {
-                    let vp = victory_type.vp;
-                    total_vp += vp * quantity;
-                }
-                _ => {}
+            if let CardType::Victory(victory_type) = &card.card_type {
+                let vp = victory_type.vp;
+                total_vp += vp * quantity;
             }
         }
-        return total_vp;
+        total_vp
     }
 }

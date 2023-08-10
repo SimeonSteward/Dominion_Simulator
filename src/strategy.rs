@@ -5,9 +5,11 @@ use crate::{
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 
+
+#[derive(Clone)]
 pub struct CardCondition<'a> {
     pub card: &'a Card,
-    pub condition: Option<fn(&Player) -> bool>,
+    pub condition: fn(&Player) -> bool,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -52,15 +54,15 @@ lazy_static! {
         [
             CardCondition {
                 card: &COPPER,
-                condition: None,
+                condition: |_player: &Player|-> bool {true},
             },
             CardCondition {
                 card: &SILVER,
-                condition: None,
+                condition: |_player: &Player|-> bool {true},
             },
             CardCondition {
                 card: &GOLD,
-                condition: None,
+                condition: |_player: &Player|-> bool {true},
             },
         ]
     };
@@ -68,71 +70,71 @@ lazy_static! {
         [
             CardCondition {
                 card: &VILLAGE,
-                condition: None,
+                condition: |_player: &Player|-> bool {true},
             },
             CardCondition {
                 card: &MARKET,
-                condition: None,
+                condition: |_player: &Player|-> bool {true},
             },
             CardCondition {
                 card: &FESTIVAL,
-                condition: None,
+                condition: |_player: &Player|-> bool {true},
             },
             CardCondition {
                 card: &SMITHY,
-                condition: None,
+                condition: |_player: &Player|-> bool {true},
             },
         ]
     };
-    pub static ref BUY_PRIORITY: [CardCondition<'static>; 7] = {
+    pub static ref DEFAULT_BUY_PRIORITY: [CardCondition<'static>; 7] = {
         [
             CardCondition {
                 card: &PROVINCE,
-                condition: Some(|player: &Player| -> bool {
+                condition: |player: &Player| -> bool {
                     player.cards.get(&*GOLD).map_or(false, |count| *count >= 2)
-                }),
+                },
             },
             CardCondition {
                 card: &DUCHY,
-                condition: Some(|player: &Player| -> bool {
+                condition: |player: &Player| -> bool {
                     player
                         .cards
                         .get(&*PROVINCE)
                         .map_or(false, |count| *count > 2)
-                }),
+                },
             },
             CardCondition {
                 card: &ESTATE,
-                condition: Some(|player: &Player| -> bool {
+                condition: |player: &Player| -> bool {
                     player
                         .cards
                         .get(&*PROVINCE)
                         .map_or(false, |count| *count > 5)
-                }),
+                },
             },
             CardCondition {
                 card: &GOLD,
-                condition: None,
+                condition: |_player: &Player|-> bool {true},
             },
             CardCondition {
                 card: &SMITHY,
-                condition: Some(|player: &Player| -> bool {
+                condition: |player: &Player| -> bool {
                     player.cards.get(&*SMITHY).map_or(true, |count| *count < 2)
-                }),
+                },
             },
             CardCondition {
                 card: &SILVER,
-                condition: None,
+                condition: |_player: &Player|-> bool {true},
             },
             CardCondition {
                 card: &COPPER,
-                condition: None,
+                condition: |_player: &Player|-> bool {true},
             },
         ]
     };
 }
 
-pub fn get_buy_priority<'a>(path: String) -> Result<Vec<NameCondition>, std::io::Error> {
+pub fn get_buy_priority(path: String) -> Result<Vec<NameCondition>, std::io::Error> {
     // Open the file in read-only mode with buffer.
     let file = std::fs::File::open(path)?;
     let reader = std::io::BufReader::new(file);

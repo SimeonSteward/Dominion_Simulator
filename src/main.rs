@@ -10,6 +10,7 @@ use std::sync::atomic::AtomicUsize;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Instant;
+use strategy::DEFAULT_BUY_PRIORITY;
 enum GameResult {
     Win,
     Tie,
@@ -18,8 +19,8 @@ enum GameResult {
 fn run_game(print_log: bool) -> GameResult {
     let mut kingdom = Kingdom::new();
     kingdom.initialize();
-    let mut player_1 = Player::new("Woodcutter", false); //
-    let mut player_2 = Player::new("Adventurer", false); //
+    let mut player_1 = Player::new("Woodcutter", false, DEFAULT_BUY_PRIORITY.to_vec()); //
+    let mut player_2 = Player::new("Adventurer", false, DEFAULT_BUY_PRIORITY.to_vec()); //
     player_1.initialize(&mut kingdom);
     player_2.initialize(&mut kingdom);
     while kingdom.game_end != GameOver::IsOver {
@@ -41,7 +42,6 @@ fn run_game(print_log: bool) -> GameResult {
         player_1_win = GameResult::Loss;
     }
     if print_log {
-        
         let verb = match player_1_win {
             GameResult::Win => "wins agaist",
             GameResult::Tie => "ties with",
