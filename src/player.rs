@@ -1,8 +1,6 @@
 use crate::card::{constants::*, Card, CardType};
 use crate::kingdom::Kingdom;
-use crate::strategy::{
-    CardCondition, ACTION_PLAY_PRIORITY_LIST, DEFAULT_BUY_PRIORITY, TREASURE_PLAY_PRIORITY_LIST,
-};
+use crate::strategy::CardCondition;
 use rand::seq::SliceRandom;
 use std::collections::HashMap;
 
@@ -20,14 +18,18 @@ pub struct Player<'a> {
     pub buys: u16,
     pub coins: u16,
     pub vp_tokens: u16,
-    pub buy_priorities: Vec<CardCondition<'a>>,
+    pub buy_priority_list: &'a Vec<CardCondition<'a>>,
+    pub action_play_priority_list: &'a Vec<CardCondition<'a>>,
+    pub treasure_play_priority_list: &'a Vec<CardCondition<'a>>,
 }
 
 impl<'a> Player<'a> {
     pub fn new(
         name: &'static str,
         print_log: bool,
-        buy_priorities: Vec<CardCondition<'a>>,
+        buy_priority_list: &'a Vec<CardCondition<'a>>,
+        action_play_priority_list: &'a Vec<CardCondition<'a>>,
+        treasure_play_priority_list: &'a Vec<CardCondition<'a>>,
     ) -> Self {
         Player {
             print_log,
@@ -43,7 +45,9 @@ impl<'a> Player<'a> {
             buys: 0,
             coins: 0,
             vp_tokens: 0,
-            buy_priorities,
+            buy_priority_list,
+            action_play_priority_list,
+            treasure_play_priority_list,
         }
     }
 
@@ -111,24 +115,26 @@ impl<'a> Player<'a> {
         // print!("{} Gains: {} {}", self.name, n, card.name);
     }
 
-    pub fn turn(&mut self, kingdom: &mut Kingdom<'a>) {
+    pub fn turn(&mut self, opponent: &Player, kingdom: &mut Kingdom<'a>) {
         self.turn_number += 1;
         if self.print_log {
             println!("\nTurn {} - {}", self.turn_number, self.name);
         }
-        self.action_phase();
-        self.buy_phase(kingdom);
+        self.action_phase(opponent, &kingdom);
+        self.buy_phase(opponent, kingdom);
         self.cleanup();
     }
 
-    pub fn action_phase(&mut self) {
+    pub fn action_phase(&mut self, opponent: &Player, kingdom: &Kingdom) {
         'actions_left: while self.actions >= 1 {
-            for action_play_priority in ACTION_PLAY_PRIORITY_LIST.iter() {
+            for action_play_priority in self.action_play_priority_list {
                 let card = action_play_priority.card;
                 let card_from_hand = self.hand.entry(card);
                 match card_from_hand {
                     std::collections::hash_map::Entry::Occupied(entry) => {
-                        if *entry.get() >= 1 && (action_play_priority.condition)(self) {
+                        if *entry.get() >= 1
+                            && (action_play_priority.condition)(self, opponent, kingdom)
+                        {
                             self.play_action_from_hand(card);
                             continue 'actions_left;
                         }
@@ -140,20 +146,20 @@ impl<'a> Player<'a> {
         }
     }
 
-    pub fn buy_phase(&mut self, kingdom: &mut Kingdom<'a>) {
-        self.play_treasures();
-        self.purchase_phase(kingdom);
+    pub fn buy_phase(&mut self, opponent: &Player, kingdom: &mut Kingdom<'a>) {
+        self.play_treasures(opponent, &kingdom);
+        self.purchase_phase(opponent, kingdom);
     }
 
-    pub fn play_treasures(&mut self) {
-        for treasure_play_priority in TREASURE_PLAY_PRIORITY_LIST.iter() {
+    pub fn play_treasures(&mut self, opponent: &Player, kingdom: &Kingdom) {
+        for treasure_play_priority in self.treasure_play_priority_list {
             let card = treasure_play_priority.card;
 
             let card_from_hand = self.hand.entry(card);
             match card_from_hand {
                 std::collections::hash_map::Entry::Occupied(occupied) => {
                     let num_card_in_hand = *occupied.get();
-                    if (treasure_play_priority.condition)(self) {
+                    if (treasure_play_priority.condition)(self, opponent, kingdom) {
                         self.play_treasure_from_hand(card, num_card_in_hand);
                     }
                 }
@@ -235,14 +241,18 @@ impl<'a> Player<'a> {
         }
     }
 
-    pub fn purchase_phase(&mut self, kingdom: &mut Kingdom<'a>) {
+    pub fn purchase_phase(&mut self, opponent: &Player, kingdom: &mut Kingdom<'a>) {
         while self.buys > 0 {
-            'priority: for buy_priority in DEFAULT_BUY_PRIORITY.iter() {
-                if buy_priority.card.cost <= self.coins && kingdom
+            'priority: for buy_priority in self.buy_priority_list {
+                if buy_priority.card.cost <= self.coins
+                    && kingdom
                         .supply_piles
-                        .get(buy_priority.card).map(|supply_pile| supply_pile.count > 0)
-                        .unwrap_or(false) && (buy_priority.condition)(self) {
-                    self.buy_card(kingdom, buy_priority);
+                        .get(buy_priority.card)
+                        .map(|supply_pile| supply_pile.count > 0)
+                        .unwrap_or(false)
+                    && (buy_priority.condition)(self, opponent, &kingdom)
+                {
+                    self.buy_card(kingdom, &buy_priority);
                     break 'priority;
                 }
             }

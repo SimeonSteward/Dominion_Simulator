@@ -46,6 +46,20 @@ pub mod constants {
 
     use crate::card::{Card, CardType};
     use lazy_static::lazy_static;
+
+    pub fn get_card(card_name: &String) -> &'static Card {
+        match CARD_MAP.get(&card_name.to_lowercase()) {
+            Some(card) => card,
+            None => {
+                panic!("Card {} not found", card_name);
+            }
+        }
+    }
+
+    pub fn is_card(card_name: &String) -> bool {
+        CARD_MAP.contains_key(&card_name.to_lowercase())
+    }
+
     lazy_static! {
         pub static ref COPPER: Card = Card {
             name: "Copper",
@@ -142,12 +156,12 @@ pub mod constants {
                 ..Default::default()
             }),
         };
-        pub static ref CARD_MAP: HashMap<String, &'static Card> = {
+        static ref CARD_MAP: HashMap<String, &'static Card> = {
             let mut map = HashMap::<String, &'static Card>::new();
 
             macro_rules! add_card {
                 ($card:expr) => {
-                    map.insert($card.name.to_string(), &$card);
+                    map.insert($card.name.to_string().to_lowercase(), &$card);
                 };
             }
 
