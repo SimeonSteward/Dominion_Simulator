@@ -1,8 +1,13 @@
 use crate::{card, strategy};
 
 pub fn create_new_priority() {
+    let mut strategy_name = String::new(); // Declare input here
+    println!("Enter Strategy Name:");
+    std::io::stdin()
+        .read_line(&mut strategy_name)
+        .expect("Failed to read line");
     let priority_list = user_input_to_priority_list();
-    strategy::save_priority_list(priority_list, "strategy.json".to_owned()); //TODO
+    let _ = strategy::save_priority_list(priority_list, format!("{strategy_name}.json"));
 }
 
 fn user_input_to_priority_list() -> Vec<strategy::NameCondition> {
