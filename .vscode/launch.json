@@ -7,15 +7,34 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "Debug executable 'dominion_simulator'",
+      "name": "Debug unit tests in library 'core'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--lib",
+          "--package=core"
+        ],
+        "filter": {
+          "name": "core",
+          "kind": "lib"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug executable 'core'",
       "cargo": {
         "args": [
           "build",
-          "--bin=dominion_simulator",
-          "--package=dominion_simulator"
+          "--bin=core",
+          "--package=core"
         ],
         "filter": {
-          "name": "dominion_simulator",
+          "name": "core",
           "kind": "bin"
         }
       },
@@ -25,16 +44,16 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "Debug unit tests in executable 'dominion_simulator'",
+      "name": "Debug unit tests in executable 'core'",
       "cargo": {
         "args": [
           "test",
           "--no-run",
-          "--bin=dominion_simulator",
-          "--package=dominion_simulator"
+          "--bin=core",
+          "--package=core"
         ],
         "filter": {
-          "name": "dominion_simulator",
+          "name": "core",
           "kind": "bin"
         }
       },

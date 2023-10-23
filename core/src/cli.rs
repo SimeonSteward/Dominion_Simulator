@@ -7,7 +7,7 @@ pub fn create_new_priority() {
         .read_line(&mut strategy_name)
         .expect("Failed to read line");
     let priority_list = user_input_to_priority_list();
-    let _ = strategy::save_priority_list(priority_list, format!("{strategy_name}.json"));
+    strategy::save_priority_list(priority_list, format!("{strategy_name}.json")).expect("Failed Save");
 }
 
 fn user_input_to_priority_list() -> Vec<strategy::NameCondition> {
