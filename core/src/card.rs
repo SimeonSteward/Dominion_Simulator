@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Hash, Serialize, Deserialize,Clone)]
 pub enum CardType {
     Treasure(TreasureType),
     Action(ActionType),
@@ -8,13 +8,13 @@ pub enum CardType {
 }
 
 #[non_exhaustive]
-#[derive(Debug, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Hash, Default, Serialize, Deserialize,Clone)]
 pub struct TreasureType {
     pub coin: u16,
 }
 
 #[non_exhaustive]
-#[derive(Debug, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Hash, Default, Serialize, Deserialize,Clone)]
 pub struct ActionType {
     pub plus_card: u16,
     pub plus_action: u16,
@@ -23,7 +23,7 @@ pub struct ActionType {
 }
 
 #[non_exhaustive]
-#[derive(Debug, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Hash, Default, Serialize, Deserialize,Clone)]
 pub struct VictoryType {
     pub vp: u16,
 }

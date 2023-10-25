@@ -38,7 +38,7 @@ fn user_input_to_priority_list() -> Vec<strategy::NameCondition> {
             }
         }
 
-        let condition = user_input_to_condition();
+        let condition = solicit_condition_type();
         let name_condition: strategy::NameCondition = strategy::NameCondition {
             card: name,
             condition,
@@ -47,21 +47,6 @@ fn user_input_to_priority_list() -> Vec<strategy::NameCondition> {
     }
 
     input_list
-}
-
-fn user_input_to_condition() -> strategy::Condition {
-    // Prompt for the first value
-    let first = solicit_value();
-
-    let condition_type = solicit_condition_type();
-
-    let second = solicit_value();
-
-    strategy::Condition {
-        condition_type,
-        first,
-        second,
-    }
 }
 
 fn solicit_value() -> strategy::ConditionValue {
@@ -103,12 +88,14 @@ fn solicit_condition_type() -> strategy::ConditionType {
     loop {
         let mut input = String::new();
         println!("Select a type of value");
-        println!("1: Greater Than");
-        println!("2: Greater Than or Equal to");
-        println!("3: Less Than");
-        println!("4: Less Than or Equal to ");
-        println!("5: Equal To");
-        println!("6: Not Equal To");
+        println!("1: True");
+        println!("2: Equal To");
+        println!("3: Not Equal To");
+        println!("4: Greater Than");
+        println!("5: Greater Than or Equal to");
+        println!("6: Less Than");
+        println!("7: Less Than or Equal to ");
+        
         std::io::stdin()
             .read_line(&mut input)
             .expect("Failed to read line");
@@ -116,12 +103,13 @@ fn solicit_condition_type() -> strategy::ConditionType {
         let trimmed_input = input.trim();
 
         let value = match trimmed_input {
-            "1" => strategy::ConditionType::GreaterThan,
-            "2" => strategy::ConditionType::GreaterThanOrEqualTo,
-            "3" => strategy::ConditionType::LessThan,
-            "4" => strategy::ConditionType::LessThanOrEqualTo,
-            "5" => strategy::ConditionType::EqualTo,
-            "6" => strategy::ConditionType::NotEqualTo,
+            "1" => strategy::ConditionType::True,
+            "2" => strategy::ConditionType::EqualTo { first: (solicit_value()), second: (solicit_value()) },
+            "3" => strategy::ConditionType::NotEqualTo { first: (solicit_value()), second: (solicit_value()) },
+            "4" => strategy::ConditionType::GreaterThan { first: (solicit_value()), second: (solicit_value()) },
+            "5" => strategy::ConditionType::GreaterThanOrEqualTo { first: (solicit_value()), second: (solicit_value()) },
+            "6" => strategy::ConditionType::LessThan { first: (solicit_value()), second: (solicit_value()) },
+            "7" => strategy::ConditionType::LessThanOrEqualTo { first: (solicit_value()), second: (solicit_value()) },
             _ => {
                 println!("Invalid option. Please select a valid option.");
                 continue;

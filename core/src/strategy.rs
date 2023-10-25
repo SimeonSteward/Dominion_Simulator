@@ -12,12 +12,31 @@ pub struct CardCondition<'a> {
 
 #[derive(Serialize, Deserialize)]
 pub enum ConditionType {
-    GreaterThan,
-    GreaterThanOrEqualTo,
-    LessThan,
-    LessThanOrEqualTo,
-    EqualTo,
-    NotEqualTo,
+    True,
+    EqualTo {
+        first: ConditionValue,
+        second: ConditionValue,
+    },
+    NotEqualTo {
+        first: ConditionValue,
+        second: ConditionValue,
+    },
+    GreaterThan {
+        first: ConditionValue,
+        second: ConditionValue,
+    },
+    GreaterThanOrEqualTo {
+        first: ConditionValue,
+        second: ConditionValue,
+    },
+    LessThan {
+        first: ConditionValue,
+        second: ConditionValue,
+    },
+    LessThanOrEqualTo {
+        first: ConditionValue,
+        second: ConditionValue,
+    },
 }
 
 #[derive(Serialize, Deserialize)]
@@ -34,31 +53,17 @@ pub enum ConditionValue {
     //     second: &'a ConditionValue<'a>
     // }
 }
-#[derive(Serialize, Deserialize)]
-pub struct Condition {
-    pub condition_type: ConditionType,
-    pub first: ConditionValue,
-    pub second: ConditionValue,
-}
 
 #[derive(Serialize, Deserialize)]
 pub struct NameCondition {
     pub card: String,
-    pub condition: Condition,
+    pub condition: ConditionType,
 }
 
-fn condition_to_func(condition: Condition) -> Box<dyn Fn(&Player, &Player, &Kingdom) -> bool> {
-    let comparator: fn(first: u16, last: u16) -> bool = match condition.condition_type {
-        ConditionType::GreaterThan => |first: u16, last: u16| first > last,
-        ConditionType::GreaterThanOrEqualTo => |first: u16, last: u16| first >= last,
-        ConditionType::LessThan => |first: u16, last: u16| first < last,
-        ConditionType::LessThanOrEqualTo => |first: u16, last: u16| first <= last,
-        ConditionType::EqualTo => |first: u16, last: u16| first == last,
-        ConditionType::NotEqualTo => |first: u16, last: u16| first != last,
-    };
-    fn func(value: ConditionValue) -> Box<dyn Fn(&Player, &Player, &Kingdom) -> u16> {
+fn condition_to_func<'a>(condition: ConditionType) -> Box<dyn Fn(&Player, &Player, &Kingdom) -> bool> {
+    fn func(value: &ConditionValue) -> Box<dyn Fn(&Player, &Player, &Kingdom) -> u16 + '_> {
         match value {
-            ConditionValue::Int(val) => Box::new(move |_player, _opponent, _kingdom| val),
+            ConditionValue::Int(val) => Box::new(move |_player, _opponent, _kingdom| *val),
             ConditionValue::CountInDeck(card_name) => {
                 Box::new(move |player, _opponent, _kingdom| -> u16 {
                     let card = card::constants::get_card(&card_name);
@@ -72,7 +77,7 @@ fn condition_to_func(condition: Condition) -> Box<dyn Fn(&Player, &Player, &King
                 Box::new(move |player, _opponent, _kingdom| -> u16 {
                     let mut sum: u16 = 0;
                     for (key, value) in player.cards.iter() {
-                        if key.card_type == card_type {
+                        if key.card_type == *card_type {
                             sum += value;
                         }
                     }
@@ -105,14 +110,52 @@ fn condition_to_func(condition: Condition) -> Box<dyn Fn(&Player, &Player, &King
             }
         }
     }
-    let first = func(condition.first);
-    let second = func(condition.second);
-    Box::new(move |player, opponent, kingdom| {
-        comparator(
-            first(player, opponent, kingdom),
-            second(player, opponent, kingdom),
-        )
-    })
+    let ret_val: Box<dyn Fn(&Player, &Player, &Kingdom) -> bool> = match condition {
+        ConditionType::True => Box::new(|_player, _opponent, _kingdom| true),
+        ConditionType::EqualTo { first, second } => {
+            Box::new(move |player, opponent, kingdom| {
+                    let f_func = func(&first);
+                    let s_func = func(&second);
+                    f_func(player, opponent, kingdom) == s_func(player, opponent, kingdom)
+                })
+        },
+        ConditionType::NotEqualTo { first, second } => {
+            Box::new(move |player, opponent, kingdom| {
+                    let f_func = func(&first);
+                    let s_func = func(&second);
+                    f_func(player, opponent, kingdom) != s_func(player, opponent, kingdom)
+                })
+        },
+        ConditionType::GreaterThan { first, second } => {
+            Box::new(move |player, opponent, kingdom| {
+                    let f_func = func(&first);
+                    let s_func = func(&second);
+                    f_func(player, opponent, kingdom) > s_func(player, opponent, kingdom)
+                })
+        },
+        ConditionType::GreaterThanOrEqualTo { first, second } => {
+            Box::new(move |player, opponent, kingdom| {
+                let f_func = func(&first);
+                let s_func = func(&second);
+                f_func(player, opponent, kingdom) >= s_func(player, opponent, kingdom)
+            })
+        }
+        ConditionType::LessThan { first, second } => {
+            Box::new(move |player, opponent, kingdom| {
+                    let f_func = func(&first);
+                    let s_func = func(&second);
+                    f_func(player, opponent, kingdom) < s_func(player, opponent, kingdom)
+                })
+        },
+        ConditionType::LessThanOrEqualTo { first, second } => {
+            Box::new(move |player, opponent, kingdom| {
+                let f_func = func(&first);
+                let s_func = func(&second);
+                f_func(player, opponent, kingdom) <= s_func(player, opponent, kingdom)
+            })
+        }
+    };
+    ret_val
 }
 
 pub fn named_priority_to_card_priority(
@@ -145,7 +188,7 @@ pub fn save_priority_list(
         Ok(it) => it,
         Err(err) => return Err(err),
     };
-    let buy_priority_str = serde_json::to_string(&priority_list)?;
+    let buy_priority_str = serde_json::to_string_pretty(&priority_list)?;
     let buy_priority_buf = buy_priority_str.as_bytes();
     std::io::Write::write_all(&mut file, buy_priority_buf)?;
     Ok(())
