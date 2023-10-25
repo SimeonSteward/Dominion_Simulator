@@ -26,15 +26,15 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "Debug executable 'core'",
+      "name": "Debug executable 'strategy_cli'",
       "cargo": {
         "args": [
           "build",
-          "--bin=core",
-          "--package=core"
+          "--bin=strategy_cli",
+          "--package=strategy_cli"
         ],
         "filter": {
-          "name": "core",
+          "name": "strategy_cli",
           "kind": "bin"
         }
       },
@@ -44,16 +44,53 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "Debug unit tests in executable 'core'",
+      "name": "Debug unit tests in executable 'strategy_cli'",
       "cargo": {
         "args": [
           "test",
           "--no-run",
-          "--bin=core",
-          "--package=core"
+          "--bin=strategy_cli",
+          "--package=strategy_cli"
         ],
         "filter": {
-          "name": "core",
+          "name": "strategy_cli",
+          "kind": "bin"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug executable 'engine'",
+      "cargo": {
+        "args": [
+          "build",
+          "--bin=engine",
+          "--package=engine"
+        ],
+        "filter": {
+          "name": "engine",
+          "kind": "bin"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in executable 'engine'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--bin=engine",
+          "--package=engine"
+        ],
+        "filter": {
+          "name": "engine",
           "kind": "bin"
         }
       },

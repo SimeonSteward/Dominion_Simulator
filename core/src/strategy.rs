@@ -139,7 +139,9 @@ pub fn save_priority_list(
     priority_list: Vec<NameCondition>,
     name: String,
 ) -> Result<(), std::io::Error> {
-    let mut file = match std::fs::File::create(name) {
+    let mut strategy_name = name.trim().to_string();
+    strategy_name = format!("strategies/{strategy_name}.json").to_string();
+    let mut file = match std::fs::File::create(strategy_name) {
         Ok(it) => it,
         Err(err) => return Err(err),
     };
