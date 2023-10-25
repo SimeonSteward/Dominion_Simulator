@@ -1,5 +1,5 @@
 [package]
-name = "core"
+name = "engine"
 version = "0.1.0"
 edition = "2021"
 
@@ -10,7 +10,8 @@ serde = { version ="1.0.164", features = ["derive"]}
 tokio = { version = "1.28.2", features = ["full"] }
 num_cpus = "1.15.0"
 serde_json = "1.0.97"
+core = { path = "../core" }
 
-[lib]
-name = "core"
-path = "src/lib.rs"
+[[bin]]
+name = "engine"
+path = "src/main.rs"

@@ -1,2 +1,2 @@
 [workspace]
-members = ["core","strategy_cli"]
+members = ["core","strategy_cli","engine"]

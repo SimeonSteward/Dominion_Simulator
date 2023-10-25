@@ -1,9 +1,4 @@
-pub mod card;
-mod kingdom;
-mod player;
-pub mod strategy;
-mod supply_pile;
-mod utils;
+use core::{card,kingdom,player,strategy,supply_pile,utils};
 use kingdom::{GameOver, Kingdom};
 use player::Player;
 // use std::sync::atomic::AtomicUsize;
