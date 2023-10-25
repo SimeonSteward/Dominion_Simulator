@@ -1,10 +1,9 @@
-mod card;
+pub mod card;
 mod kingdom;
 mod player;
-mod strategy;
+pub mod strategy;
 mod supply_pile;
 mod utils;
-pub mod cli;
 use kingdom::{GameOver, Kingdom};
 use player::Player;
 // use std::sync::atomic::AtomicUsize;
@@ -213,8 +212,7 @@ async fn multi_threaded_tokio() {
 
 
 fn main() {
-    // single_treaded();
+    //single_treaded();
     // multi_threaded();
     // multi_threaded_tokio();
-    cli::create_new_priority();
 }

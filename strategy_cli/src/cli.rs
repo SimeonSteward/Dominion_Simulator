@@ -1,4 +1,4 @@
-use crate::{card, strategy};
+use core::{strategy, card};
 
 pub fn create_new_priority() {
     let mut strategy_name = String::new(); // Declare input here
@@ -31,7 +31,7 @@ fn user_input_to_priority_list() -> Vec<strategy::NameCondition> {
                 break 'name_condition;
             }
 
-            if crate::card::constants::is_card(&name) {
+            if core::card::constants::is_card(&name) {
                 break 'card_name;
             } else {
                 println!("Invalid card name. Please try again.");
