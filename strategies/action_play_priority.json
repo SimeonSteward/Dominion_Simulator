@@ -1,0 +1,22 @@
+[
+  {
+    "card": "festival",
+    "condition": "True"
+  },
+  {
+    "card": "village",
+    "condition": "True"
+  },
+  {
+    "card": "market",
+    "condition": "True"
+  },
+  {
+    "card": "laboratory",
+    "condition": "True"
+  },
+  {
+    "card": "smithy",
+    "condition": "True"
+  }
+]

@@ -79,10 +79,9 @@ fn single_treaded(
     p1_buy_priority: Vec<CardCondition>,
     p1_action_play_priority_list: Vec<CardCondition<'_>>,
     p1_treasure_play_priority_list: Vec<CardCondition<'_>>,
+    p2_buy_priority: Vec<CardCondition>,
     p2_action_play_priority_list: Vec<CardCondition<'_>>,
     p2_treasure_play_priority_list: Vec<CardCondition<'_>>,
-
-    p2_buy_priority: Vec<CardCondition>,
 ) {
     let start_time = Instant::now();
 

@@ -1,0 +1,62 @@
+[
+  {
+    "card": "province",
+    "condition": {
+      "GreaterThan": {
+        "first": {
+          "CountInDeck": "gold"
+        },
+        "second": {
+          "Int": 1
+        }
+      }
+    }
+  },
+  {
+    "card": "duchy",
+    "condition": {
+      "LessThanOrEqualTo": {
+        "first": {
+          "CountInSupply": "province"
+        },
+        "second": {
+          "Int": 4
+        }
+      }
+    }
+  },
+  {
+    "card": "estate",
+    "condition": {
+      "LessThanOrEqualTo": {
+        "first": {
+          "CountInSupply": "province"
+        },
+        "second": {
+          "Int": 2
+        }
+      }
+    }
+  },
+  {
+    "card": "gold",
+    "condition": "True"
+  },
+  {
+    "card": "duchy",
+    "condition": {
+      "LessThanOrEqualTo": {
+        "first": {
+          "CountInSupply": "province"
+        },
+        "second": {
+          "Int": 6
+        }
+      }
+    }
+  },
+  {
+    "card": "silver",
+    "condition": "True"
+  }
+]

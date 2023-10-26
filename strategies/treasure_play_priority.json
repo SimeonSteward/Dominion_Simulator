@@ -1,0 +1,14 @@
+[
+  {
+    "card": "gold",
+    "condition": "True"
+  },
+  {
+    "card": "silver",
+    "condition": "True"
+  },
+  {
+    "card": "copper",
+    "condition": "True"
+  }
+]
