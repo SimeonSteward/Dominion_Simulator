@@ -1,4 +1,4 @@
-use core::{card,kingdom,player,strategy,supply_pile,utils};
+use core::{kingdom, player, strategy};
 use kingdom::{GameOver, Kingdom};
 use player::Player;
 // use std::sync::atomic::AtomicUsize;
@@ -76,12 +76,12 @@ fn run_game(
 }
 
 fn single_treaded(
-    p1_buy_priority: Vec<CardCondition>,
-    p1_action_play_priority_list: Vec<CardCondition<'_>>,
-    p1_treasure_play_priority_list: Vec<CardCondition<'_>>,
-    p2_buy_priority: Vec<CardCondition>,
-    p2_action_play_priority_list: Vec<CardCondition<'_>>,
-    p2_treasure_play_priority_list: Vec<CardCondition<'_>>,
+    p1_buy_priority: &Vec<CardCondition>,
+    p1_action_play_priority_list: &Vec<CardCondition<'_>>,
+    p1_treasure_play_priority_list: &Vec<CardCondition<'_>>,
+    p2_buy_priority: &Vec<CardCondition>,
+    p2_action_play_priority_list: &Vec<CardCondition<'_>>,
+    p2_treasure_play_priority_list: &Vec<CardCondition<'_>>,
 ) {
     let start_time = Instant::now();
 
@@ -89,15 +89,15 @@ fn single_treaded(
     let mut ties: u16 = 0;
     let mut losses: u16 = 0;
 
-    for _ in 1..10000 {
+    for _ in 1..10 {
         match run_game(
             false,
-            &p1_buy_priority,
-            &p1_action_play_priority_list,
-            &p1_treasure_play_priority_list,
-            &p2_buy_priority,
-            &p2_action_play_priority_list,
-            &p2_treasure_play_priority_list,
+            p1_buy_priority,
+            p1_action_play_priority_list,
+            p1_treasure_play_priority_list,
+            p2_buy_priority,
+            p2_action_play_priority_list,
+            p2_treasure_play_priority_list,
         ) {
             GameResult::Win => {
                 wins += 1;
@@ -204,9 +204,32 @@ async fn multi_threaded_tokio() {
 }
 */
 
-
 fn main() {
-    //single_treaded();
+    let action_play = core::strategy::get_priority_list("action_play_priority".to_owned())
+        .expect("Error Loading Action Play priority:");
+    let treasure_play = core::strategy::get_priority_list("treasure_play_priority".to_owned())
+        .expect("Error Loading Treasure Play priority:");
+    let big_money = core::strategy::get_priority_list("big_money_ultimate".to_owned())
+        .expect("Error Loading Action Play priority:");
+    let smithy_money = core::strategy::get_priority_list("smithy_money".to_owned())
+        .expect("Error Loading Action Play priority:");
+    run_game(
+        true,
+        &big_money,
+        &action_play,
+        &treasure_play,
+        &smithy_money,
+        &action_play,
+        &treasure_play,
+    );
+    // single_treaded(
+    //     &big_money,
+    //     &action_play,
+    //     &treasure_play,
+    //     &smithy_money,
+    //     &action_play,
+    //     &treasure_play,
+    // );
     // multi_threaded();
     // multi_threaded_tokio();
 }

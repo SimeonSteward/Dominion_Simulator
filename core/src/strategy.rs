@@ -169,14 +169,26 @@ pub fn named_priority_to_card_priority(
     }
     card_priority
 }
-pub fn get_priority_list(path: String) -> Result<Vec<NameCondition>, std::io::Error> {
+pub fn load_priority_list(name: String) -> Result<Vec<NameCondition>, std::io::Error> {
+    let mut strategy_name = name.trim().to_string();
+    strategy_name = format!("strategies/{strategy_name}.json").to_string();
     // Open the file in read-only mode with buffer.
-    let file = std::fs::File::open(path)?;
+    let file = std::fs::File::open(strategy_name)?;
     let reader = std::io::BufReader::new(file);
     // Read the JSON contents of the file as an instance of `User`.
     let conds = serde_json::from_reader(reader)?;
     Ok(conds)
 }
+
+pub fn get_priority_list(name:String) -> Result<Vec<CardCondition<'static>>,std::io::Error> {
+    let named_priority_list = load_priority_list(name);
+    match named_priority_list {
+        Ok(named_p_list) => Ok(named_priority_to_card_priority(named_p_list)),
+        Err(err) => Err(err),
+    }
+
+}
+
 
 pub fn save_priority_list(
     priority_list: Vec<NameCondition>,

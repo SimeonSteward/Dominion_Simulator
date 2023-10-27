@@ -120,7 +120,7 @@ impl<'a> Player<'a> {
         if self.print_log {
             println!("\nTurn {} - {}", self.turn_number, self.name);
         }
-        self.action_phase(opponent, &kingdom);
+        self.action_phase(opponent, kingdom);
         self.buy_phase(opponent, kingdom);
         self.cleanup();
     }
@@ -147,7 +147,7 @@ impl<'a> Player<'a> {
     }
 
     pub fn buy_phase(&mut self, opponent: &Player, kingdom: &mut Kingdom<'a>) {
-        self.play_treasures(opponent, &kingdom);
+        self.play_treasures(opponent, kingdom);
         self.purchase_phase(opponent, kingdom);
     }
 
@@ -250,9 +250,9 @@ impl<'a> Player<'a> {
                         .get(buy_priority.card)
                         .map(|supply_pile| supply_pile.count > 0)
                         .unwrap_or(false)
-                    && (buy_priority.condition)(self, opponent, &kingdom)
+                    && (buy_priority.condition)(self, opponent, kingdom)
                 {
-                    self.buy_card(kingdom, &buy_priority);
+                    self.buy_card(kingdom, buy_priority);
                     break 'priority;
                 }
             }
