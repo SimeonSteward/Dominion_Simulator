@@ -241,8 +241,9 @@ impl<'a> Player<'a> {
         }
     }
 
-    pub fn purchase_phase(&mut self, opponent: &Player, kingdom: &mut Kingdom<'a>) {
-        while self.buys > 0 {
+    pub fn purchase_phase(&mut self, opponent: &Player, kingdom: &mut Kingdom<'a>) { //TODO!!!!!
+        let mut done = false;
+        while self.buys > 0 && !done {
             'priority: for buy_priority in self.buy_priority_list {
                 if buy_priority.card.cost <= self.coins
                     && kingdom
@@ -256,6 +257,7 @@ impl<'a> Player<'a> {
                     break 'priority;
                 }
             }
+            done = true;
         }
     }
 
