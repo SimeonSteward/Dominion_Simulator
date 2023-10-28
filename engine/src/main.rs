@@ -13,6 +13,7 @@ enum GameResult {
 }
 fn run_game(
     print_log: bool,
+    p1_is_first_player: bool,
     p1_buy_priority: &Vec<CardCondition>,
     p1_action_play_priority_list: &Vec<CardCondition<'_>>,
     p1_treasure_play_priority_list: &Vec<CardCondition<'_>>,
@@ -24,20 +25,23 @@ fn run_game(
     kingdom.initialize();
     let mut player_1 = Player::new(
         "Woodcutter",
-        false,
+        print_log,
         p1_buy_priority,
         p1_action_play_priority_list,
         p1_treasure_play_priority_list,
     ); //
     let mut player_2 = Player::new(
         "Adventurer",
-        false,
+        print_log,
         p2_buy_priority,
         p2_action_play_priority_list,
         p2_treasure_play_priority_list,
     ); //
     player_1.initialize(&mut kingdom);
     player_2.initialize(&mut kingdom);
+    if !p1_is_first_player {
+        player_2.turn(&player_1, &mut kingdom);
+    }
     while kingdom.game_end != GameOver::IsOver {
         player_1.turn(&player_2, &mut kingdom);
         if kingdom.game_end == GameOver::IsOver {
@@ -85,13 +89,15 @@ fn single_treaded(
 ) {
     let start_time = Instant::now();
 
-    let mut wins: u16 = 0;
-    let mut ties: u16 = 0;
-    let mut losses: u16 = 0;
+    let mut wins: u32 = 0;
+    let mut ties: u32 = 0;
+    let mut losses: u32 = 0;
+    let mut p1_is_first_player: bool = true;
 
-    for _ in 1..10 {
+    for _ in 0..100000 {
         match run_game(
             false,
+            p1_is_first_player,
             p1_buy_priority,
             p1_action_play_priority_list,
             p1_treasure_play_priority_list,
@@ -109,6 +115,7 @@ fn single_treaded(
                 losses += 1;
             }
         }
+        p1_is_first_player = !p1_is_first_player;
     }
     let elapsed_time = start_time.elapsed();
     println!("Wins: {}, Losses: {}, Ties: {}", wins, losses, ties);
@@ -213,16 +220,8 @@ fn main() {
         .expect("Error Loading Action Play priority:");
     let smithy_money = core::strategy::get_priority_list("smithy_money".to_owned())
         .expect("Error Loading Action Play priority:");
-    run_game(
-        true,
-        &big_money,
-        &action_play,
-        &treasure_play,
-        &smithy_money,
-        &action_play,
-        &treasure_play,
-    );
-    // single_treaded(
+    // run_game(
+    //     true,
     //     &big_money,
     //     &action_play,
     //     &treasure_play,
@@ -230,6 +229,14 @@ fn main() {
     //     &action_play,
     //     &treasure_play,
     // );
+    single_treaded(
+        &big_money,
+        &action_play,
+        &treasure_play,
+        &smithy_money,
+        &action_play,
+        &treasure_play,
+    );
     // multi_threaded();
     // multi_threaded_tokio();
 }
