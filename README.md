@@ -10,6 +10,6 @@ Ensure Cargo and Rust are installed on your system
 ## Project Timeline
 - [x] Basic Game Engine
 - [x] Saving Strategies
-- [ ] Loading Strategies
+- [x] Loading Strategies
 - [ ] Implementing all cards
 
