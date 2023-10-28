@@ -1,4 +1,4 @@
-use core::{kingdom, player, strategy};
+use core::{kingdom, player::{self, PlayerPriorities}, strategy};
 use kingdom::{GameOver, Kingdom};
 use player::Player;
 // use std::sync::atomic::AtomicUsize;
@@ -11,31 +11,25 @@ enum GameResult {
     Tie,
     Loss,
 }
+
 fn run_game(
     print_log: bool,
     p1_is_first_player: bool,
-    p1_buy_priority: &Vec<CardCondition>,
-    p1_action_play_priority_list: &Vec<CardCondition<'_>>,
-    p1_treasure_play_priority_list: &Vec<CardCondition<'_>>,
-    p2_buy_priority: &Vec<CardCondition>,
-    p2_action_play_priority_list: &Vec<CardCondition<'_>>,
-    p2_treasure_play_priority_list: &Vec<CardCondition<'_>>,
+    p1_priorities: &PlayerPriorities,
+    p2_priorities: &PlayerPriorities,
 ) -> GameResult {
     let mut kingdom = Kingdom::new();
     kingdom.initialize();
     let mut player_1 = Player::new(
         "Woodcutter",
         print_log,
-        p1_buy_priority,
-        p1_action_play_priority_list,
-        p1_treasure_play_priority_list,
+        p1_priorities,
     ); //
     let mut player_2 = Player::new(
         "Adventurer",
         print_log,
-        p2_buy_priority,
-        p2_action_play_priority_list,
-        p2_treasure_play_priority_list,
+        p2_priorities,
+        
     ); //
     player_1.initialize(&mut kingdom);
     player_2.initialize(&mut kingdom);
@@ -80,12 +74,9 @@ fn run_game(
 }
 
 fn single_treaded(
-    p1_buy_priority: &Vec<CardCondition>,
-    p1_action_play_priority_list: &Vec<CardCondition<'_>>,
-    p1_treasure_play_priority_list: &Vec<CardCondition<'_>>,
-    p2_buy_priority: &Vec<CardCondition>,
-    p2_action_play_priority_list: &Vec<CardCondition<'_>>,
-    p2_treasure_play_priority_list: &Vec<CardCondition<'_>>,
+    num_trials: u32,
+    p1_priorities: &PlayerPriorities,
+    p2_priorities: &PlayerPriorities,
 ) {
     let start_time = Instant::now();
 
@@ -94,16 +85,12 @@ fn single_treaded(
     let mut losses: u32 = 0;
     let mut p1_is_first_player: bool = true;
 
-    for _ in 0..100000 {
+    for _ in 0..num_trials {
         match run_game(
             false,
             p1_is_first_player,
-            p1_buy_priority,
-            p1_action_play_priority_list,
-            p1_treasure_play_priority_list,
-            p2_buy_priority,
-            p2_action_play_priority_list,
-            p2_treasure_play_priority_list,
+            p1_priorities,
+            p2_priorities,
         ) {
             GameResult::Win => {
                 wins += 1;
@@ -220,22 +207,21 @@ fn main() {
         .expect("Error Loading Action Play priority:");
     let smithy_money = core::strategy::get_priority_list("smithy_money".to_owned())
         .expect("Error Loading Action Play priority:");
-    // run_game(
-    //     true,
-    //     &big_money,
-    //     &action_play,
-    //     &treasure_play,
-    //     &smithy_money,
-    //     &action_play,
-    //     &treasure_play,
-    // );
+    let p1_priorities = PlayerPriorities {
+        buy_priority: &big_money,
+        action_play_priority: &action_play,
+        treasure_play_priority: &treasure_play,
+    };
+    let p2_priorities = PlayerPriorities {
+        buy_priority: &smithy_money,
+        action_play_priority: &action_play,
+        treasure_play_priority: &treasure_play,
+    };
+    
     single_treaded(
-        &big_money,
-        &action_play,
-        &treasure_play,
-        &smithy_money,
-        &action_play,
-        &treasure_play,
+        100,
+        &p1_priorities,
+        &p2_priorities,
     );
     // multi_threaded();
     // multi_threaded_tokio();

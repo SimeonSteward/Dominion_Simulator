@@ -60,17 +60,14 @@ pub struct NameCondition {
     pub condition: ConditionType,
 }
 
-fn condition_to_func<'a>(condition: ConditionType) -> Box<dyn Fn(&Player, &Player, &Kingdom) -> bool> {
+fn condition_to_func(condition: ConditionType) -> Box<dyn Fn(&Player, &Player, &Kingdom) -> bool> {
     fn func(value: &ConditionValue) -> Box<dyn Fn(&Player, &Player, &Kingdom) -> u16 + '_> {
         match value {
             ConditionValue::Int(val) => Box::new(move |_player, _opponent, _kingdom| *val),
             ConditionValue::CountInDeck(card_name) => {
                 Box::new(move |player, _opponent, _kingdom| -> u16 {
-                    let card = card::constants::get_card(&card_name);
-                    match player.cards.get(card).copied() {
-                        Some(num) => num,
-                        None => 0,
-                    }
+                    let card = card::constants::get_card(card_name);
+                    player.cards.get(card).copied().unwrap_or(0)
                 })
             }
             ConditionValue::CountTypeInDeck(card_type) => {
@@ -86,7 +83,7 @@ fn condition_to_func<'a>(condition: ConditionType) -> Box<dyn Fn(&Player, &Playe
             }
             ConditionValue::CountInSupply(card_name) => {
                 Box::new(move |_player, _opponent, kingdom| -> u16 {
-                    let card = card::constants::get_card(&card_name);
+                    let card = card::constants::get_card(card_name);
                     let supply_pile = kingdom.supply_piles.get(card);
                     match supply_pile {
                         Some(supply_pile) => supply_pile.count,
@@ -188,7 +185,6 @@ pub fn get_priority_list(name:String) -> Result<Vec<CardCondition<'static>>,std:
     }
 
 }
-
 
 pub fn save_priority_list(
     priority_list: Vec<NameCondition>,
