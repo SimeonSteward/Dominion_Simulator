@@ -56,7 +56,7 @@ pub mod constants {
         }
     }
 
-    pub fn is_card(card_name: &String) -> bool {
+    pub fn is_card(card_name: &str) -> bool {
         CARD_MAP.contains_key(&card_name.to_lowercase())
     }
 

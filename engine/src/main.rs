@@ -1,11 +1,10 @@
-use core::{kingdom, player::{self, PlayerPriorities}, strategy};
+use core::{
+    kingdom,
+    player::{self, PlayerPriorities},
+};
 use kingdom::{GameOver, Kingdom};
 use player::Player;
-// use std::sync::atomic::AtomicUsize;
-// use std::sync::{Arc, Mutex};
-// use std::thread;
-use std::time::Instant;
-use strategy::CardCondition;
+use std::{cmp::Ordering, time::Instant};
 enum GameResult {
     Win,
     Tie,
@@ -20,17 +19,8 @@ fn run_game(
 ) -> GameResult {
     let mut kingdom = Kingdom::new();
     kingdom.initialize();
-    let mut player_1 = Player::new(
-        "Woodcutter",
-        print_log,
-        p1_priorities,
-    ); //
-    let mut player_2 = Player::new(
-        "Adventurer",
-        print_log,
-        p2_priorities,
-        
-    ); //
+    let mut player_1 = Player::new("Woodcutter", print_log, p1_priorities); //
+    let mut player_2 = Player::new("Adventurer", print_log, p2_priorities); //
     player_1.initialize(&mut kingdom);
     player_2.initialize(&mut kingdom);
     if !p1_is_first_player {
@@ -46,14 +36,20 @@ fn run_game(
 
     let player_1_vp = player_1.get_vp();
     let player_2_vp = player_2.get_vp();
-    let player_1_win: GameResult;
-    if player_1_vp == player_2_vp && player_1.turn_number == player_2.turn_number {
-        player_1_win = GameResult::Tie;
-    } else if player_1_vp > player_2_vp {
-        player_1_win = GameResult::Win;
-    } else {
-        player_1_win = GameResult::Loss;
-    }
+    let player_1_win: GameResult = match player_1_vp.cmp(&player_2_vp) {
+        Ordering::Less => GameResult::Loss,
+        Ordering::Equal => {
+            match (p1_is_first_player, player_1.turn_number == player_2.turn_number) {
+                (true, true) => GameResult::Tie,
+                (true, false) => GameResult::Loss,
+                (false, true) => GameResult::Tie,
+                (false, false) => GameResult::Win,
+            }
+            
+        },
+        Ordering::Greater => GameResult::Win,
+    };
+
     if print_log {
         let verb = match player_1_win {
             GameResult::Win => "wins agaist",
@@ -86,12 +82,7 @@ fn single_treaded(
     let mut p1_is_first_player: bool = true;
 
     for _ in 0..num_trials {
-        match run_game(
-            false,
-            p1_is_first_player,
-            p1_priorities,
-            p2_priorities,
-        ) {
+        match run_game(false, p1_is_first_player, p1_priorities, p2_priorities) {
             GameResult::Win => {
                 wins += 1;
             }
@@ -217,12 +208,8 @@ fn main() {
         action_play_priority: &action_play,
         treasure_play_priority: &treasure_play,
     };
-    
-    single_treaded(
-        100,
-        &p1_priorities,
-        &p2_priorities,
-    );
+
+    single_treaded(100000, &p1_priorities, &p2_priorities);
     // multi_threaded();
     // multi_threaded_tokio();
 }
