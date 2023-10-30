@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 pub struct CardCondition<'a> {
     pub card: &'a Card,
-    pub condition: Box<dyn Fn(&Player<'_>, &Player<'_>, &Kingdom<'_>) -> bool>,
+    pub condition: Box<dyn Send + Sync + Fn(&Player<'_>, &Player<'_>, &Kingdom<'_>) -> bool>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -60,7 +60,7 @@ pub struct NameCondition {
     pub condition: ConditionType,
 }
 
-fn condition_to_func(condition: ConditionType) -> Box<dyn Fn(&Player, &Player, &Kingdom) -> bool> {
+fn condition_to_func(condition: ConditionType) -> Box<dyn Send + Sync + Fn(&Player, &Player, &Kingdom) -> bool> {
     fn func(value: &ConditionValue) -> Box<dyn Fn(&Player, &Player, &Kingdom) -> u16 + '_> {
         match value {
             ConditionValue::Int(val) => Box::new(move |_player, _opponent, _kingdom| *val),
@@ -107,7 +107,7 @@ fn condition_to_func(condition: ConditionType) -> Box<dyn Fn(&Player, &Player, &
             }
         }
     }
-    let ret_val: Box<dyn Fn(&Player, &Player, &Kingdom) -> bool> = match condition {
+    let ret_val: Box<dyn Send + Sync + Fn(&Player, &Player, &Kingdom) -> bool> = match condition {
         ConditionType::True => Box::new(|_player, _opponent, _kingdom| true),
         ConditionType::EqualTo { first, second } => {
             Box::new(move |player, opponent, kingdom| {

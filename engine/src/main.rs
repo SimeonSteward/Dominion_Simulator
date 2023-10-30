@@ -4,7 +4,11 @@ use core::{
 };
 use kingdom::{GameOver, Kingdom};
 use player::Player;
-use std::{cmp::Ordering, time::Instant};
+use std::{
+    cmp::Ordering,
+    sync::{atomic::AtomicUsize, Arc},
+    time::Instant,
+};
 enum GameResult {
     Win,
     Tie,
@@ -39,14 +43,16 @@ fn run_game(
     let player_1_win: GameResult = match player_1_vp.cmp(&player_2_vp) {
         Ordering::Less => GameResult::Loss,
         Ordering::Equal => {
-            match (p1_is_first_player, player_1.turn_number == player_2.turn_number) {
+            match (
+                p1_is_first_player,
+                player_1.turn_number == player_2.turn_number,
+            ) {
                 (true, true) => GameResult::Tie,
                 (true, false) => GameResult::Loss,
                 (false, true) => GameResult::Tie,
                 (false, false) => GameResult::Win,
             }
-            
-        },
+        }
         Ordering::Greater => GameResult::Win,
     };
 
@@ -69,36 +75,36 @@ fn run_game(
     player_1_win
 }
 
-fn single_treaded(
-    num_trials: u32,
-    p1_priorities: &PlayerPriorities,
-    p2_priorities: &PlayerPriorities,
-) {
-    let start_time = Instant::now();
+// fn single_treaded(
+//     num_trials: u32,
+//     p1_priorities: &PlayerPriorities,
+//     p2_priorities: &PlayerPriorities,
+// ) {
+//     let start_time = Instant::now();
 
-    let mut wins: u32 = 0;
-    let mut ties: u32 = 0;
-    let mut losses: u32 = 0;
-    let mut p1_is_first_player: bool = true;
+//     let mut wins: u32 = 0;
+//     let mut ties: u32 = 0;
+//     let mut losses: u32 = 0;
+//     let mut p1_is_first_player: bool = true;
 
-    for _ in 0..num_trials {
-        match run_game(false, p1_is_first_player, p1_priorities, p2_priorities) {
-            GameResult::Win => {
-                wins += 1;
-            }
-            GameResult::Tie => {
-                ties += 1;
-            }
-            GameResult::Loss => {
-                losses += 1;
-            }
-        }
-        p1_is_first_player = !p1_is_first_player;
-    }
-    let elapsed_time = start_time.elapsed();
-    println!("Wins: {}, Losses: {}, Ties: {}", wins, losses, ties);
-    println!("Elapsed time: {:?}", elapsed_time);
-}
+//     for _ in 0..num_trials {
+//         match run_game(false, p1_is_first_player, p1_priorities, p2_priorities) {
+//             GameResult::Win => {
+//                 wins += 1;
+//             }
+//             GameResult::Tie => {
+//                 ties += 1;
+//             }
+//             GameResult::Loss => {
+//                 losses += 1;
+//             }
+//         }
+//         p1_is_first_player = !p1_is_first_player;
+//     }
+//     let elapsed_time = start_time.elapsed();
+//     println!("Wins: {}, Losses: {}, Ties: {}", wins, losses, ties);
+//     println!("Elapsed time: {:?}", elapsed_time);
+// }
 /*
 fn multi_threaded() {
     let wins = Arc::new(Mutex::new(0));
@@ -142,41 +148,42 @@ fn multi_threaded() {
     println!("Elapsed time: {:?}", elapsed_time);
 }
 */
-/*
 #[tokio::main]
-async fn multi_threaded_tokio() {
+async fn multi_threaded_tokio(
+    num_trials: u32,
+    p1_priorities: &PlayerPriorities,
+    p2_priorities: &PlayerPriorities,
+) {
     let wins = Arc::new(AtomicUsize::new(0));
     let ties = Arc::new(AtomicUsize::new(0));
     let losses = Arc::new(AtomicUsize::new(0));
 
-    let mut tasks = vec![];
 
     let start_time = Instant::now();
-    for _ in 1..10000 {
-        let wins = Arc::clone(&wins);
-        let ties = Arc::clone(&ties);
-        let losses = Arc::clone(&losses);
 
-        let task = tokio::task::spawn(async move {
-            match run_game(false) {
-                GameResult::Win => {
-                    wins.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-                }
-                GameResult::Tie => {
-                    ties.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-                }
-                GameResult::Loss => {
-                    losses.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-                }
-            }
-        });
+    tokio_scoped::scope(|scope| {
+        for index in 0..num_trials {
+            let wins = Arc::clone(&wins);
+            let ties = Arc::clone(&ties);
+            let losses = Arc::clone(&losses);
 
-        tasks.push(task);
-    }
+            scope.spawn(async move {
+                match run_game(false, index % 2 != 0, p1_priorities, p2_priorities) {
+                    GameResult::Win => {
+                        wins.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                    }
+                    GameResult::Tie => {
+                        ties.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                    }
+                    GameResult::Loss => {
+                        losses.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                    }
+                }
+            });
+        }
+    });
 
-    for task in tasks {
-        task.await.unwrap();
-    }
+    
 
     let elapsed_time = start_time.elapsed();
     println!(
@@ -187,7 +194,6 @@ async fn multi_threaded_tokio() {
     );
     println!("Elapsed time: {:?}", elapsed_time);
 }
-*/
 
 fn main() {
     let action_play = core::strategy::get_priority_list("action_play_priority".to_owned())
@@ -209,7 +215,7 @@ fn main() {
         treasure_play_priority: &treasure_play,
     };
 
-    single_treaded(100000, &p1_priorities, &p2_priorities);
+    //single_treaded(10000, &p1_priorities, &p2_priorities);
     // multi_threaded();
-    // multi_threaded_tokio();
+    multi_threaded_tokio(100000, &p1_priorities, &p2_priorities);
 }
