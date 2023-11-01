@@ -4,10 +4,10 @@ use crate::strategy::CardCondition;
 use rand::seq::SliceRandom;
 use std::collections::HashMap;
 
-pub struct PlayerPriorities<'a>{
+pub struct PlayerPriorities<'a> {
     pub buy_priority: &'a Vec<CardCondition<'a>>,
     pub action_play_priority: &'a Vec<CardCondition<'a>>,
-    pub treasure_play_priority: &'a Vec<CardCondition<'a>>
+    pub treasure_play_priority: &'a Vec<CardCondition<'a>>,
 }
 pub struct Player<'a> {
     pub print_log: bool,
@@ -169,12 +169,11 @@ impl<'a> Player<'a> {
 
     pub fn play_treasure_from_hand(&mut self, card: &'a Card, n: u16) {
         match &card.card_type {
-            CardType::Treasure(treasure_type) => {
-                let coin = treasure_type.coin;
-                self.coins += coin * n;
+            CardType::Treasure => {
                 if self.print_log {
                     println!("{} plays {} {}s", self.name, n, card.name);
                 }
+                (card.play_treasure)(self, n);
                 for _ in 0..n {
                     self.cards_in_play.push(card);
                 }
@@ -203,15 +202,11 @@ impl<'a> Player<'a> {
     pub fn play_action_from_hand(&mut self, card: &'a Card) {
         if self.actions >= 1 {
             match &card.card_type {
-                CardType::Action(action_type) => {
+                CardType::Action => {
                     if self.print_log {
                         println!("{} plays a {}", self.name, card.name);
                     }
-                    self.coins += action_type.plus_coin;
-                    self.buys += action_type.plus_buy;
-                    self.actions -= 1;
-                    self.actions += action_type.plus_action;
-                    self.draw(action_type.plus_card);
+                    (card.play_action)(self);
                     self.cards_in_play.push(card);
                     match self.hand.entry(card) {
                         std::collections::hash_map::Entry::Occupied(mut entry) => {
@@ -240,7 +235,7 @@ impl<'a> Player<'a> {
         }
     }
 
-    pub fn purchase_phase(&mut self, opponent: &Player, kingdom: &mut Kingdom<'a>) { //TODO!!!!!
+    pub fn purchase_phase(&mut self, opponent: &Player, kingdom: &mut Kingdom<'a>) {
         let mut done = false;
         while self.buys > 0 && !done {
             'priority: for buy_priority in self.player_priorities.buy_priority {
@@ -285,8 +280,8 @@ impl<'a> Player<'a> {
     pub fn get_vp(&self) -> u16 {
         let mut total_vp: u16 = self.vp_tokens;
         for (card, quantity) in self.cards.iter() {
-            if let CardType::Victory(victory_type) = &card.card_type {
-                let vp = victory_type.vp;
+            if let CardType::Victory = &card.card_type {
+                let vp = (card.points)(self);
                 total_vp += vp * quantity;
             }
         }

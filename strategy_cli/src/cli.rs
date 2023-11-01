@@ -172,9 +172,9 @@ fn card_type_input(prompt: &str) -> card::CardType {
         let trimmed_input = input.trim();
 
         match trimmed_input {
-            "Action" => return card::CardType::Action(Default::default()),
-            "Treasure" => return card::CardType::Treasure(Default::default()),
-            "Victory" => return card::CardType::Victory(Default::default()),
+            "Action" => return card::CardType::Action,
+            "Treasure" => return card::CardType::Treasure,
+            "Victory" => return card::CardType::Victory,
             _ => {
                 println!("Invalid card type. Please enter a valid card type (Action, Treasure, Victory).");
                 continue;
