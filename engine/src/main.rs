@@ -75,79 +75,6 @@ fn run_game(
     player_1_win
 }
 
-// fn single_treaded(
-//     num_trials: u32,
-//     p1_priorities: &PlayerPriorities,
-//     p2_priorities: &PlayerPriorities,
-// ) {
-//     let start_time = Instant::now();
-
-//     let mut wins: u32 = 0;
-//     let mut ties: u32 = 0;
-//     let mut losses: u32 = 0;
-//     let mut p1_is_first_player: bool = true;
-
-//     for _ in 0..num_trials {
-//         match run_game(false, p1_is_first_player, p1_priorities, p2_priorities) {
-//             GameResult::Win => {
-//                 wins += 1;
-//             }
-//             GameResult::Tie => {
-//                 ties += 1;
-//             }
-//             GameResult::Loss => {
-//                 losses += 1;
-//             }
-//         }
-//         p1_is_first_player = !p1_is_first_player;
-//     }
-//     let elapsed_time = start_time.elapsed();
-//     println!("Wins: {}, Losses: {}, Ties: {}", wins, losses, ties);
-//     println!("Elapsed time: {:?}", elapsed_time);
-// }
-/*
-fn multi_threaded() {
-    let wins = Arc::new(Mutex::new(0));
-    let ties = Arc::new(Mutex::new(0));
-    let losses = Arc::new(Mutex::new(0));
-
-    let mut handles = Vec::new();
-
-    let start_time = Instant::now();
-    for _ in 1..10000 {
-        let wins = Arc::clone(&wins);
-        let ties = Arc::clone(&ties);
-        let losses = Arc::clone(&losses);
-
-        let handle = thread::spawn(move || match run_game(false) {
-            GameResult::Win => {
-                *wins.lock().unwrap() += 1;
-            }
-            GameResult::Tie => {
-                *ties.lock().unwrap() += 1;
-            }
-            GameResult::Loss => {
-                *losses.lock().unwrap() += 1;
-            }
-        });
-
-        handles.push(handle);
-    }
-
-    for handle in handles {
-        handle.join().unwrap();
-    }
-
-    let elapsed_time = start_time.elapsed();
-    println!(
-        "Wins: {}, Losses: {}, Ties: {}",
-        *wins.lock().unwrap(),
-        *losses.lock().unwrap(),
-        *ties.lock().unwrap()
-    );
-    println!("Elapsed time: {:?}", elapsed_time);
-}
-*/
 #[tokio::main]
 async fn multi_threaded_tokio(
     num_trials: u32,
@@ -215,7 +142,7 @@ fn main() {
         treasure_play_priority: &treasure_play,
     };
 
-    //single_treaded(10000, &p1_priorities, &p2_priorities);
-    // multi_threaded();
+    //run_game(true, true, &p1_priorities, &p2_priorities);
+
     multi_threaded_tokio(100000, &p1_priorities, &p2_priorities);
 }

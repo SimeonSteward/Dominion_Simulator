@@ -60,7 +60,9 @@ pub struct NameCondition {
     pub condition: ConditionType,
 }
 
-fn condition_to_func(condition: ConditionType) -> Box<dyn Send + Sync + Fn(&Player, &Player, &Kingdom) -> bool> {
+fn condition_to_func(
+    condition: ConditionType,
+) -> Box<dyn Send + Sync + Fn(&Player, &Player, &Kingdom) -> bool> {
     fn func(value: &ConditionValue) -> Box<dyn Fn(&Player, &Player, &Kingdom) -> u16 + '_> {
         match value {
             ConditionValue::Int(val) => Box::new(move |_player, _opponent, _kingdom| *val),
@@ -109,27 +111,25 @@ fn condition_to_func(condition: ConditionType) -> Box<dyn Send + Sync + Fn(&Play
     }
     let ret_val: Box<dyn Send + Sync + Fn(&Player, &Player, &Kingdom) -> bool> = match condition {
         ConditionType::True => Box::new(|_player, _opponent, _kingdom| true),
-        ConditionType::EqualTo { first, second } => {
-            Box::new(move |player, opponent, kingdom| {
-                    let f_func = func(&first);
-                    let s_func = func(&second);
-                    f_func(player, opponent, kingdom) == s_func(player, opponent, kingdom)
-                })
-        },
+        ConditionType::EqualTo { first, second } => Box::new(move |player, opponent, kingdom| {
+            let f_func = func(&first);
+            let s_func = func(&second);
+            f_func(player, opponent, kingdom) == s_func(player, opponent, kingdom)
+        }),
         ConditionType::NotEqualTo { first, second } => {
             Box::new(move |player, opponent, kingdom| {
-                    let f_func = func(&first);
-                    let s_func = func(&second);
-                    f_func(player, opponent, kingdom) != s_func(player, opponent, kingdom)
-                })
-        },
+                let f_func = func(&first);
+                let s_func = func(&second);
+                f_func(player, opponent, kingdom) != s_func(player, opponent, kingdom)
+            })
+        }
         ConditionType::GreaterThan { first, second } => {
             Box::new(move |player, opponent, kingdom| {
-                    let f_func = func(&first);
-                    let s_func = func(&second);
-                    f_func(player, opponent, kingdom) > s_func(player, opponent, kingdom)
-                })
-        },
+                let f_func = func(&first);
+                let s_func = func(&second);
+                f_func(player, opponent, kingdom) > s_func(player, opponent, kingdom)
+            })
+        }
         ConditionType::GreaterThanOrEqualTo { first, second } => {
             Box::new(move |player, opponent, kingdom| {
                 let f_func = func(&first);
@@ -137,13 +137,11 @@ fn condition_to_func(condition: ConditionType) -> Box<dyn Send + Sync + Fn(&Play
                 f_func(player, opponent, kingdom) >= s_func(player, opponent, kingdom)
             })
         }
-        ConditionType::LessThan { first, second } => {
-            Box::new(move |player, opponent, kingdom| {
-                    let f_func = func(&first);
-                    let s_func = func(&second);
-                    f_func(player, opponent, kingdom) < s_func(player, opponent, kingdom)
-                })
-        },
+        ConditionType::LessThan { first, second } => Box::new(move |player, opponent, kingdom| {
+            let f_func = func(&first);
+            let s_func = func(&second);
+            f_func(player, opponent, kingdom) < s_func(player, opponent, kingdom)
+        }),
         ConditionType::LessThanOrEqualTo { first, second } => {
             Box::new(move |player, opponent, kingdom| {
                 let f_func = func(&first);
@@ -177,13 +175,12 @@ pub fn load_priority_list(name: String) -> Result<Vec<NameCondition>, std::io::E
     Ok(conds)
 }
 
-pub fn get_priority_list(name:String) -> Result<Vec<CardCondition<'static>>,std::io::Error> {
+pub fn get_priority_list(name: String) -> Result<Vec<CardCondition<'static>>, std::io::Error> {
     let named_priority_list = load_priority_list(name);
     match named_priority_list {
         Ok(named_p_list) => Ok(named_priority_to_card_priority(named_p_list)),
         Err(err) => Err(err),
     }
-
 }
 
 pub fn save_priority_list(
