@@ -29,21 +29,21 @@ impl<'a> Kingdom<'a> {
                     .insert(&$card, SupplyPile::new(&$card, $count));
             };
         }
-        add_supply_pile!(self, COPPER, 60);
-        add_supply_pile!(self, SILVER, 40);
-        add_supply_pile!(self, GOLD, 30);
-        add_supply_pile!(self, ESTATE, 8);
-        add_supply_pile!(self, DUCHY, 8);
-        add_supply_pile!(self, PROVINCE, 8);
-        add_supply_pile!(self, SMITHY, 10);
-        add_supply_pile!(self, VILLAGE, 10);
+        add_supply_pile!(self, copper::COPPER, 60);
+        add_supply_pile!(self, silver::SILVER, 40);
+        add_supply_pile!(self, gold::GOLD, 30);
+        add_supply_pile!(self, estate::ESTATE, 8);
+        add_supply_pile!(self, duchy::DUCHY, 8);
+        add_supply_pile!(self, province::PROVINCE, 8);
+        add_supply_pile!(self, smithy::SMITHY, 10);
+        add_supply_pile!(self, village::VILLAGE, 10);
     }
 
     pub fn remove_from_supply(&mut self, card: &'a Card, n: u16) {
         if let Some(supply_pile) = self.supply_piles.get_mut(card) {
             supply_pile.count -= n;
             if supply_pile.count == 0 {
-                if *supply_pile.card == *PROVINCE {
+                if *supply_pile.card == *province::PROVINCE {
                     self.game_end = GameOver::IsOver;
                 }
                 match self.game_end {

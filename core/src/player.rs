@@ -51,9 +51,9 @@ impl<'a> Player<'a> {
     }
 
     pub fn initialize(&mut self, kingdom: &mut Kingdom) {
-        kingdom.remove_from_supply(&COPPER, 7);
-        self.add_to_discard(&COPPER, 7);
-        self.add_to_discard(&ESTATE, 3);
+        kingdom.remove_from_supply(&copper::COPPER, 7);
+        self.add_to_discard(&copper::COPPER, 7);
+        self.add_to_discard(&estate::ESTATE, 3);
         if self.print_log {
             println!("{} starts with 7 Coppers", self.abreviated_name);
             println!("{} starts with 3 Estates", self.abreviated_name);
