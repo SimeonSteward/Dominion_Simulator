@@ -48,6 +48,7 @@ pub enum ConditionValue {
     CountAllCardsInDeck,
     CountVp,
     CountOpponentVp,
+    CountCoin,
     // Plus{
     //     first: &'a ConditionValue<'a>,
     //     second: &'a ConditionValue<'a>
@@ -106,6 +107,12 @@ fn condition_to_func(
             }
             ConditionValue::CountOpponentVp => {
                 Box::new(|_player, opponent, _kingdom| -> u16 { opponent.get_vp() })
+            },
+            ConditionValue::CountCoin => {
+                Box::new(|player,_opponent,_kingdom| -> u16 {
+                    player.get_coin()
+                })
+
             }
         }
     }

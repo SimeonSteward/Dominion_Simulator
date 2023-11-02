@@ -287,4 +287,14 @@ impl<'a> Player<'a> {
         }
         total_vp
     }
+
+    pub fn get_coin(&self) -> u16 {
+        let mut total_coin: u16 = 0;
+        for (card, quantity) in self.cards.iter() {
+            if let CardType::Treasure = &card.card_type {
+                total_coin += card.coin * quantity;
+            }
+        }
+        total_coin
+    }
 }

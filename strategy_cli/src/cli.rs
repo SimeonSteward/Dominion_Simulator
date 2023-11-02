@@ -60,6 +60,7 @@ fn solicit_value() -> strategy::ConditionValue {
         println!("5: Count All Cards in Deck");
         println!("6: Count VP");
         println!("7: Count Opponent's VP");
+        println!("8: Count Coin");
         std::io::stdin()
             .read_line(&mut input)
             .expect("Failed to read line");
@@ -74,6 +75,7 @@ fn solicit_value() -> strategy::ConditionValue {
             "5" => strategy::ConditionValue::CountAllCardsInDeck,
             "6" => strategy::ConditionValue::CountVp,
             "7" => strategy::ConditionValue::CountOpponentVp,
+            "8" => strategy::ConditionValue::CountCoin,
             _ => {
                 println!("Invalid option. Please select a valid option.");
                 continue;

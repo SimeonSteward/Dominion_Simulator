@@ -5,6 +5,7 @@ lazy_static! {
         name: "Copper",
         cost: 0,
         card_type: CardType::Treasure,
+        coin: 1,
         play_treasure: |player, n| { player.coins += n },
         ..Default::default()
     };

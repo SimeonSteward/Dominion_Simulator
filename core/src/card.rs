@@ -19,6 +19,7 @@ pub struct Card {
     pub name: &'static str,
     pub cost: u16,
     pub card_type: CardType,
+    pub coin: u16,
     pub play_action: fn(&mut player::Player),
     pub play_treasure: fn(&mut player::Player, u16),
     pub points: fn(&player::Player) -> u16,
@@ -40,6 +41,7 @@ impl Default for Card {
             name: "",
             cost: u16::MAX,
             card_type: CardType::Action,
+            coin: 0,
             play_action: |_| {},
             play_treasure: |_, _| {},
             points: |_| 0,
@@ -49,7 +51,6 @@ impl Default for Card {
 
 pub mod constants {
     use std::collections::HashMap;
-
     use crate::card::Card;
     use lazy_static::lazy_static;
     pub mod supply {
