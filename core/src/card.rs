@@ -50,19 +50,23 @@ impl Default for Card {
 pub mod constants {
     use std::collections::HashMap;
 
-    use crate::card::{Card, CardType};
+    use crate::card::Card;
     use lazy_static::lazy_static;
-    pub mod copper;
-    pub mod silver;
-    pub mod gold;
-    pub mod estate;
-    pub mod duchy;
-    pub mod province;
-    pub mod market;
-    pub mod laboratory;
-    pub mod village;
-    pub mod smithy;
-    pub mod festival;
+    pub mod supply {
+        pub mod copper;
+        pub mod duchy;
+        pub mod estate;
+        pub mod gold;
+        pub mod province;
+        pub mod silver;
+    }
+    pub mod base {
+        pub mod festival;
+        pub mod laboratory;
+        pub mod market;
+        pub mod smithy;
+        pub mod village;
+    }
 
     pub fn get_card(card_name: &String) -> &'static Card {
         match CARD_MAP.get(&card_name.to_lowercase()) {
@@ -87,17 +91,17 @@ pub mod constants {
                 };
             }
 
-            add_card!(province::PROVINCE);
-            add_card!(duchy::DUCHY);
-            add_card!(estate::ESTATE);
-            add_card!(gold::GOLD);
-            add_card!(silver::SILVER);
-            add_card!(copper::COPPER);
-            add_card!(village::VILLAGE);
-            add_card!(smithy::SMITHY);
-            add_card!(market::MARKET);
-            add_card!(festival::FESTIVAL);
-            add_card!(laboratory::LABORATORY);
+            add_card!(supply::province::PROVINCE);
+            add_card!(supply::duchy::DUCHY);
+            add_card!(supply::estate::ESTATE);
+            add_card!(supply::gold::GOLD);
+            add_card!(supply::silver::SILVER);
+            add_card!(supply::copper::COPPER);
+            add_card!(base::village::VILLAGE);
+            add_card!(base::smithy::SMITHY);
+            add_card!(base::market::MARKET);
+            add_card!(base::festival::FESTIVAL);
+            add_card!(base::laboratory::LABORATORY);
 
             map
         };
