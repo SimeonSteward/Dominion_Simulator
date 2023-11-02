@@ -3,9 +3,11 @@
     "card": "province",
     "condition": {
       "GreaterThan": {
-        "first": "CountCoin",
+        "first": {
+          "CountInDeck": "gold"
+        },
         "second": {
-          "Int": 18
+          "Int": 0
         }
       }
     }
@@ -49,6 +51,19 @@
         },
         "second": {
           "Int": 6
+        }
+      }
+    }
+  },
+  {
+    "card": "council room",
+    "condition": {
+      "EqualTo": {
+        "first": {
+          "CountInDeck": "council room"
+        },
+        "second": {
+          "Int": 0
         }
       }
     }

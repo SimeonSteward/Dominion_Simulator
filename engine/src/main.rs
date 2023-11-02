@@ -42,17 +42,11 @@ fn run_game(
     let player_2_vp = player_2.get_vp();
     let player_1_win: GameResult = match player_1_vp.cmp(&player_2_vp) {
         Ordering::Less => GameResult::Loss,
-        Ordering::Equal => {
-            match (
-                p1_is_first_player,
-                player_1.turn_number == player_2.turn_number,
-            ) {
-                (true, true) => GameResult::Tie,
-                (true, false) => GameResult::Loss,
-                (false, true) => GameResult::Tie,
-                (false, false) => GameResult::Win,
-            }
-        }
+        Ordering::Equal => match player_1.turn_number.cmp(&player_2.turn_number) {
+            Ordering::Less => GameResult::Win,
+            Ordering::Equal => GameResult::Tie,
+            Ordering::Greater => GameResult::Loss,
+        },
         Ordering::Greater => GameResult::Win,
     };
 
@@ -85,7 +79,6 @@ async fn multi_threaded_tokio(
     let ties = Arc::new(AtomicUsize::new(0));
     let losses = Arc::new(AtomicUsize::new(0));
 
-
     let start_time = Instant::now();
 
     tokio_scoped::scope(|scope| {
@@ -110,8 +103,6 @@ async fn multi_threaded_tokio(
         }
     });
 
-    
-
     let elapsed_time = start_time.elapsed();
     println!(
         "Wins: {}, Losses: {}, Ties: {}",
@@ -129,7 +120,7 @@ fn main() {
         .expect("Error Loading Treasure Play priority:");
     let big_money = core::strategy::get_priority_list("big_money_ultimate".to_owned())
         .expect("Error Loading Action Play priority:");
-    let smithy_money = core::strategy::get_priority_list("smithy_money".to_owned())
+    let council_room_money = core::strategy::get_priority_list("council_room_money".to_owned())
         .expect("Error Loading Action Play priority:");
     let p1_priorities = PlayerPriorities {
         buy_priority: &big_money,
@@ -137,7 +128,7 @@ fn main() {
         treasure_play_priority: &treasure_play,
     };
     let p2_priorities = PlayerPriorities {
-        buy_priority: &smithy_money,
+        buy_priority: &council_room_money,
         action_play_priority: &action_play,
         treasure_play_priority: &treasure_play,
     };

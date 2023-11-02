@@ -16,6 +16,10 @@
     "condition": "True"
   },
   {
+    "card": "council room",
+    "condition": "True"
+  },
+  {
     "card": "smithy",
     "condition": "True"
   }
