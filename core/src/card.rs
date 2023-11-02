@@ -20,8 +20,8 @@ pub struct Card {
     pub cost: u16,
     pub card_type: CardType,
     pub coin: u16,
-    pub play_action: fn(&mut player::Player),
-    pub play_treasure: fn(&mut player::Player, u16),
+    pub play_action: fn(owner: &mut player::Player, opponent: &mut player::Player),
+    pub play_treasure: fn(owner: &mut player::Player, quantity: u16),
     pub points: fn(&player::Player) -> u16,
 }
 impl PartialEq for Card {
@@ -42,7 +42,7 @@ impl Default for Card {
             cost: u16::MAX,
             card_type: CardType::Action,
             coin: 0,
-            play_action: |_| {},
+            play_action: |_,_| {},
             play_treasure: |_, _| {},
             points: |_| 0,
         }
@@ -62,6 +62,7 @@ pub mod constants {
         pub mod silver;
     }
     pub mod base {
+        pub mod council_room;
         pub mod festival;
         pub mod laboratory;
         pub mod market;
@@ -103,6 +104,7 @@ pub mod constants {
             add_card!(base::market::MARKET);
             add_card!(base::festival::FESTIVAL);
             add_card!(base::laboratory::LABORATORY);
+            add_card!(base::council_room::COUNCIL_ROOM);
 
             map
         };

@@ -5,7 +5,7 @@ lazy_static! {
         name: "Laboratory",
         cost: 5,
         card_type: CardType::Action,
-        play_action: |player| {
+        play_action: |player, _| {
             player.draw(2);
             player.actions += 1;
         },

@@ -28,14 +28,14 @@ fn run_game(
     player_1.initialize(&mut kingdom);
     player_2.initialize(&mut kingdom);
     if !p1_is_first_player {
-        player_2.turn(&player_1, &mut kingdom);
+        player_2.turn(&mut player_1, &mut kingdom);
     }
     while kingdom.game_end != GameOver::IsOver {
-        player_1.turn(&player_2, &mut kingdom);
+        player_1.turn(&mut player_2, &mut kingdom);
         if kingdom.game_end == GameOver::IsOver {
             break;
         }
-        player_2.turn(&player_1, &mut kingdom);
+        player_2.turn(&mut player_1, &mut kingdom);
     }
 
     let player_1_vp = player_1.get_vp();

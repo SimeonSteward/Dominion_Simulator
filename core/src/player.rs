@@ -114,7 +114,7 @@ impl<'a> Player<'a> {
         // print!("{} Gains: {} {}", self.name, n, card.name);
     }
 
-    pub fn turn(&mut self, opponent: &Player, kingdom: &mut Kingdom<'a>) {
+    pub fn turn(&mut self, opponent: &mut Player, kingdom: &mut Kingdom<'a>) {
         self.turn_number += 1;
         if self.print_log {
             println!("\nTurn {} - {}", self.turn_number, self.name);
@@ -124,7 +124,7 @@ impl<'a> Player<'a> {
         self.cleanup();
     }
 
-    pub fn action_phase(&mut self, opponent: &Player, kingdom: &Kingdom) {
+    pub fn action_phase(&mut self, opponent: &mut Player, kingdom: &Kingdom) {
         'actions_left: while self.actions >= 1 {
             for action_play_priority in self.player_priorities.action_play_priority {
                 let card = action_play_priority.card;
@@ -134,7 +134,7 @@ impl<'a> Player<'a> {
                         if *entry.get() >= 1
                             && (action_play_priority.condition)(self, opponent, kingdom)
                         {
-                            self.play_action_from_hand(card);
+                            self.play_action_from_hand(card, opponent);
                             continue 'actions_left;
                         }
                     }
@@ -199,14 +199,14 @@ impl<'a> Player<'a> {
         }
     }
 
-    pub fn play_action_from_hand(&mut self, card: &'a Card) {
+    pub fn play_action_from_hand(&mut self, card: &'a Card, opponent: &mut Player) {
         if self.actions >= 1 {
             match &card.card_type {
                 CardType::Action => {
                     if self.print_log {
                         println!("{} plays a {}", self.name, card.name);
                     }
-                    (card.play_action)(self);
+                    (card.play_action)(self, opponent);
                     self.cards_in_play.push(card);
                     match self.hand.entry(card) {
                         std::collections::hash_map::Entry::Occupied(mut entry) => {

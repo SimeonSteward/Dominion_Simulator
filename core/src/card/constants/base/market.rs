@@ -5,7 +5,7 @@ lazy_static! {
             name: "Market",
             cost: 5,
             card_type: CardType::Action,
-            play_action: |player| {
+            play_action: |player, _| {
                 player.draw(1);
                 player.actions += 1;
                 player.coins += 1;
