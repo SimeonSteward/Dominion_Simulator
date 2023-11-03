@@ -68,7 +68,7 @@ impl<'a> Player<'a> {
             let remaining_cards = self.deck.len() as u16;
             self.add_cards_to_hand(remaining_cards);
             self.shuffle();
-            let additional_cards_needed = n - remaining_cards;
+            let additional_cards_needed = std::cmp::min(n - remaining_cards, self.deck.len().try_into().expect("Failed to convert usize into u16"));
             self.add_cards_to_hand(additional_cards_needed);
         }
         if self.print_log {
@@ -207,7 +207,10 @@ impl<'a> Player<'a> {
                         println!("{} plays a {}", self.name, card.name);
                     }
                     (card.play_action)(self, opponent);
+                    self.actions -= 1;
                     self.cards_in_play.push(card);
+
+                    //Removes card from hand
                     match self.hand.entry(card) {
                         std::collections::hash_map::Entry::Occupied(mut entry) => {
                             let num_in_hand = *entry.get_mut();
@@ -248,7 +251,7 @@ impl<'a> Player<'a> {
                         .unwrap_or(false)
                     && (buy_priority.condition)(self, opponent, kingdom)
                 {
-                    self.buy_card(kingdom, buy_priority);
+                    self.buy_card(kingdom, buy_priority.card);
                     done = false;
                     break 'priority;
                 }
@@ -256,12 +259,12 @@ impl<'a> Player<'a> {
         }
     }
 
-    fn buy_card(&mut self, kingdom: &mut Kingdom<'a>, buy_priority: &CardCondition<'a>) {
-        self.coins -= buy_priority.card.cost;
+    fn buy_card(&mut self, kingdom: &mut Kingdom<'a>, card: &'a Card) {
+        self.coins -= card.cost;
         self.buys -= 1;
-        self.gain(kingdom, buy_priority.card, 1);
+        self.gain(kingdom, card, 1);
         if self.print_log {
-            println!("{} buys and gains a {}", self.name, buy_priority.card.name);
+            println!("{} buys and gains a {}", self.name, card.name);
         }
     }
 
