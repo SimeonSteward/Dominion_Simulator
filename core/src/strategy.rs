@@ -64,12 +64,14 @@ pub struct NameCondition {
 fn condition_to_func(
     condition: ConditionType,
 ) -> Box<dyn Send + Sync + Fn(&Player, &Player, &Kingdom) -> bool> {
-    fn func(value: &ConditionValue) -> Box<dyn Fn(&Player, &Player, &Kingdom) -> u16 + '_> {
+    fn func<'func>(
+        value: ConditionValue,
+    ) -> Box<dyn Send + Sync + Fn(&Player, &Player, &Kingdom) -> u16 + 'func> {
         match value {
-            ConditionValue::Int(val) => Box::new(move |_player, _opponent, _kingdom| *val),
+            ConditionValue::Int(val) => Box::new(move |_player, _opponent, _kingdom| val),
             ConditionValue::CountInDeck(card_name) => {
-                Box::new(move |player, _opponent, _kingdom| -> u16 {
-                    let card = card::constants::get_card(card_name);
+                let card: &'func Card = card::constants::get_card(&card_name);
+                Box::new(|player, _opponent, _kingdom| -> u16 {
                     player.cards.get(card).copied().unwrap_or(0)
                 })
             }
@@ -77,7 +79,7 @@ fn condition_to_func(
                 Box::new(move |player, _opponent, _kingdom| -> u16 {
                     let mut sum: u16 = 0;
                     for (key, value) in player.cards.iter() {
-                        if key.card_type == *card_type {
+                        if key.card_type == card_type {
                             sum += value;
                         }
                     }
@@ -85,8 +87,8 @@ fn condition_to_func(
                 })
             }
             ConditionValue::CountInSupply(card_name) => {
-                Box::new(move |_player, _opponent, kingdom| -> u16 {
-                    let card = card::constants::get_card(card_name);
+                let card: &'func Card = card::constants::get_card(&card_name);
+                Box::new(|_player, _opponent, kingdom| -> u16 {
                     let supply_pile = kingdom.supply_piles.get(card);
                     match supply_pile {
                         Some(supply_pile) => supply_pile.count,
@@ -107,52 +109,53 @@ fn condition_to_func(
             }
             ConditionValue::CountOpponentVp => {
                 Box::new(|_player, opponent, _kingdom| -> u16 { opponent.get_vp() })
-            },
+            }
             ConditionValue::CountCoin => {
-                Box::new(|player,_opponent,_kingdom| -> u16 {
-                    player.get_coin()
-                })
-
+                Box::new(|player, _opponent, _kingdom| -> u16 { player.get_coin() })
             }
         }
     }
     let ret_val: Box<dyn Send + Sync + Fn(&Player, &Player, &Kingdom) -> bool> = match condition {
         ConditionType::True => Box::new(|_player, _opponent, _kingdom| true),
-        ConditionType::EqualTo { first, second } => Box::new(move |player, opponent, kingdom| {
-            let f_func = func(&first);
-            let s_func = func(&second);
-            f_func(player, opponent, kingdom) == s_func(player, opponent, kingdom)
-        }),
-        ConditionType::NotEqualTo { first, second } => {
+        ConditionType::EqualTo { first, second } => {
+            let f_func = func(first);
+            let s_func = func(second);
             Box::new(move |player, opponent, kingdom| {
-                let f_func = func(&first);
-                let s_func = func(&second);
+                f_func(player, opponent, kingdom) == s_func(player, opponent, kingdom)
+            })
+        }
+        ConditionType::NotEqualTo { first, second } => {
+            let f_func = func(first);
+            let s_func = func(second);
+            Box::new(move |player, opponent, kingdom| {
                 f_func(player, opponent, kingdom) != s_func(player, opponent, kingdom)
             })
         }
         ConditionType::GreaterThan { first, second } => {
+            let f_func = func(first);
+            let s_func = func(second);
             Box::new(move |player, opponent, kingdom| {
-                let f_func = func(&first);
-                let s_func = func(&second);
                 f_func(player, opponent, kingdom) > s_func(player, opponent, kingdom)
             })
         }
         ConditionType::GreaterThanOrEqualTo { first, second } => {
+            let f_func = func(first);
+            let s_func = func(second);
             Box::new(move |player, opponent, kingdom| {
-                let f_func = func(&first);
-                let s_func = func(&second);
                 f_func(player, opponent, kingdom) >= s_func(player, opponent, kingdom)
             })
         }
-        ConditionType::LessThan { first, second } => Box::new(move |player, opponent, kingdom| {
-            let f_func = func(&first);
-            let s_func = func(&second);
-            f_func(player, opponent, kingdom) < s_func(player, opponent, kingdom)
-        }),
-        ConditionType::LessThanOrEqualTo { first, second } => {
+        ConditionType::LessThan { first, second } => {
+            let f_func = func(first);
+            let s_func = func(second);
             Box::new(move |player, opponent, kingdom| {
-                let f_func = func(&first);
-                let s_func = func(&second);
+                f_func(player, opponent, kingdom) < s_func(player, opponent, kingdom)
+            })
+        }
+        ConditionType::LessThanOrEqualTo { first, second } => {
+            let f_func = func(first);
+            let s_func = func(second);
+            Box::new(move |player, opponent, kingdom| {
                 f_func(player, opponent, kingdom) <= s_func(player, opponent, kingdom)
             })
         }

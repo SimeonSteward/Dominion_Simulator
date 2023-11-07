@@ -143,7 +143,7 @@ fn main() {
         trash_priority:&trash_priority,
     };
 
-    run_game(true, true, &p1_priorities, &p2_priorities);
+    //run_game(true, true, &p1_priorities, &p2_priorities);
 
-    multi_threaded_tokio(10000, &p1_priorities, &p2_priorities);
+    multi_threaded_tokio(100000, &p1_priorities, &p2_priorities);
 }
