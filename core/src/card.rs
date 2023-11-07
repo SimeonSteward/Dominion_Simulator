@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::player;
+use crate::{kingdom, player};
 
 #[derive(Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum CardType {
@@ -20,7 +20,11 @@ pub struct Card {
     pub cost: u16,
     pub card_type: CardType,
     pub coin: u16,
-    pub play_action: fn(owner: &mut player::Player, opponent: &mut player::Player),
+    pub play_action: for <'a> fn(
+        owner: &mut player::Player<'a>,
+        opponent: &mut player::Player<'a>,
+        kingdom: &mut kingdom::Kingdom<'a>,
+    ),
     pub play_treasure: fn(owner: &mut player::Player, quantity: u16),
     pub points: fn(&player::Player) -> u16,
 }
@@ -42,7 +46,7 @@ impl Default for Card {
             cost: u16::MAX,
             card_type: CardType::Action,
             coin: 0,
-            play_action: |_,_| {},
+            play_action: |_, _, _| {},
             play_treasure: |_, _| {},
             points: |_| 0,
         }
@@ -50,9 +54,9 @@ impl Default for Card {
 }
 
 pub mod constants {
-    use std::collections::HashMap;
     use crate::card::Card;
     use lazy_static::lazy_static;
+    use std::collections::HashMap;
     pub mod supply {
         pub mod copper;
         pub mod duchy;
@@ -62,6 +66,7 @@ pub mod constants {
         pub mod silver;
     }
     pub mod base {
+        pub mod chapel;
         pub mod council_room;
         pub mod festival;
         pub mod laboratory;
@@ -105,6 +110,7 @@ pub mod constants {
             add_card!(base::festival::FESTIVAL);
             add_card!(base::laboratory::LABORATORY);
             add_card!(base::council_room::COUNCIL_ROOM);
+            add_card!(base::chapel::CHAPEL);
 
             map
         };

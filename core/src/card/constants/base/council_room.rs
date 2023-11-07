@@ -5,7 +5,7 @@ lazy_static! {
         name: "Council Room",
         cost: 5,
         card_type: CardType::Action,
-        play_action: |player, opponent| {
+        play_action: |player, opponent, _| {
             player.draw(4);
             player.buys += 1;
             opponent.draw(1);

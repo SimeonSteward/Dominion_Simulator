@@ -4,18 +4,20 @@ use crate::strategy::CardCondition;
 use rand::seq::SliceRandom;
 use std::collections::HashMap;
 
-pub struct PlayerPriorities<'a> {
-    pub buy_priority: &'a Vec<CardCondition<'a>>,
-    pub action_play_priority: &'a Vec<CardCondition<'a>>,
-    pub treasure_play_priority: &'a Vec<CardCondition<'a>>,
+pub struct PlayerPriorities<'priorities> {
+    pub name: &'static str,
+    pub buy_priority: &'priorities Vec<CardCondition<'priorities>>,
+    pub action_play_priority: &'priorities Vec<CardCondition<'priorities>>,
+    pub treasure_play_priority: &'priorities Vec<CardCondition<'priorities>>,
+    pub trash_priority: &'priorities Vec<CardCondition<'priorities>>,
 }
-pub struct Player<'a> {
+pub struct Player<'player> {
     pub print_log: bool,
-    pub deck: Vec<&'a Card>,
-    pub cards_in_play: Vec<&'a Card>,
-    pub discard: Vec<&'a Card>,
-    pub hand: HashMap<&'a Card, u16>,
-    pub cards: HashMap<&'a Card, u16>,
+    pub deck: Vec<&'player Card>,
+    pub cards_in_play: Vec<&'player Card>,
+    pub discard: Vec<&'player Card>,
+    pub hand: HashMap<&'player Card, u16>,
+    pub cards: HashMap<&'player Card, u16>,
     pub name: &'static str,
     pub abreviated_name: &'static str,
     pub turn_number: u16,
@@ -23,14 +25,14 @@ pub struct Player<'a> {
     pub buys: u16,
     pub coins: u16,
     pub vp_tokens: u16,
-    pub player_priorities: &'a PlayerPriorities<'a>,
+    pub player_priorities: &'player PlayerPriorities<'player>,
 }
 
-impl<'a> Player<'a> {
+impl<'player> Player<'player> {
     pub fn new(
         name: &'static str,
         print_log: bool,
-        player_priorities: &'a PlayerPriorities<'a>,
+        player_priorities: &'player PlayerPriorities<'player>,
     ) -> Self {
         Player {
             print_log,
@@ -68,7 +70,13 @@ impl<'a> Player<'a> {
             let remaining_cards = self.deck.len() as u16;
             self.add_cards_to_hand(remaining_cards);
             self.shuffle();
-            let additional_cards_needed = std::cmp::min(n - remaining_cards, self.deck.len().try_into().expect("Failed to convert usize into u16"));
+            let additional_cards_needed = std::cmp::min(
+                n - remaining_cards,
+                self.deck
+                    .len()
+                    .try_into()
+                    .expect("Failed to convert usize into u16"),
+            );
             self.add_cards_to_hand(additional_cards_needed);
         }
         if self.print_log {
@@ -100,7 +108,7 @@ impl<'a> Player<'a> {
         self.deck.shuffle(&mut rand::thread_rng());
     }
 
-    pub fn add_to_discard(&mut self, card: &'a Card, n: u16) {
+    pub fn add_to_discard(&mut self, card: &'player Card, n: u16) {
         for _ in 0..n {
             self.discard.push(card);
         }
@@ -108,13 +116,13 @@ impl<'a> Player<'a> {
         *count += n;
     }
 
-    pub fn gain(&mut self, kingdom: &mut Kingdom<'a>, card: &'a Card, n: u16) {
+    pub fn gain(&mut self, kingdom: &mut Kingdom<'player>, card: &'player Card, n: u16) {
         kingdom.remove_from_supply(card, n);
         self.add_to_discard(card, n);
         // print!("{} Gains: {} {}", self.name, n, card.name);
     }
 
-    pub fn turn(&mut self, opponent: &mut Player, kingdom: &mut Kingdom<'a>) {
+    pub fn turn(&mut self, opponent: &mut Player<'player>, kingdom: &mut Kingdom<'player>) {
         self.turn_number += 1;
         if self.print_log {
             println!("\nTurn {} - {}", self.turn_number, self.name);
@@ -124,7 +132,7 @@ impl<'a> Player<'a> {
         self.cleanup();
     }
 
-    pub fn action_phase(&mut self, opponent: &mut Player, kingdom: &Kingdom) {
+    pub fn action_phase(&mut self, opponent: &mut Player<'player>, kingdom: &mut Kingdom<'player>) {
         'actions_left: while self.actions >= 1 {
             for action_play_priority in self.player_priorities.action_play_priority {
                 let card = action_play_priority.card;
@@ -134,7 +142,7 @@ impl<'a> Player<'a> {
                         if *entry.get() >= 1
                             && (action_play_priority.condition)(self, opponent, kingdom)
                         {
-                            self.play_action_from_hand(card, opponent);
+                            self.play_action_from_hand(card, opponent, kingdom);
                             continue 'actions_left;
                         }
                     }
@@ -145,7 +153,7 @@ impl<'a> Player<'a> {
         }
     }
 
-    pub fn buy_phase(&mut self, opponent: &Player, kingdom: &mut Kingdom<'a>) {
+    pub fn buy_phase(&mut self, opponent: &Player, kingdom: &mut Kingdom<'player>) {
         self.play_treasures(opponent, kingdom);
         self.purchase_phase(opponent, kingdom);
     }
@@ -167,7 +175,7 @@ impl<'a> Player<'a> {
         }
     }
 
-    pub fn play_treasure_from_hand(&mut self, card: &'a Card, n: u16) {
+    pub fn play_treasure_from_hand(&mut self, card: &'player Card, n: u16) {
         match &card.card_type {
             CardType::Treasure => {
                 if self.print_log {
@@ -199,14 +207,14 @@ impl<'a> Player<'a> {
         }
     }
 
-    pub fn play_action_from_hand(&mut self, card: &'a Card, opponent: &mut Player) {
+    pub fn play_action_from_hand(&mut self, card: &'player Card, opponent: &mut Player<'player>, kingdom: &mut Kingdom<'player>) {
         if self.actions >= 1 {
             match &card.card_type {
                 CardType::Action => {
                     if self.print_log {
                         println!("{} plays a {}", self.name, card.name);
                     }
-                    (card.play_action)(self, opponent);
+                    (card.play_action)(self, opponent, kingdom);
                     self.actions -= 1;
                     self.cards_in_play.push(card);
 
@@ -238,7 +246,7 @@ impl<'a> Player<'a> {
         }
     }
 
-    pub fn purchase_phase(&mut self, opponent: &Player, kingdom: &mut Kingdom<'a>) {
+    pub fn purchase_phase(&mut self, opponent: &Player, kingdom: &mut Kingdom<'player>) {
         let mut done = false;
         while self.buys > 0 && !done {
             done = true;
@@ -259,13 +267,59 @@ impl<'a> Player<'a> {
         }
     }
 
-    fn buy_card(&mut self, kingdom: &mut Kingdom<'a>, card: &'a Card) {
+    fn buy_card(&mut self, kingdom: &mut Kingdom<'player>, card: &'player Card) {
         self.coins -= card.cost;
         self.buys -= 1;
         self.gain(kingdom, card, 1);
         if self.print_log {
             println!("{} buys and gains a {}", self.name, card.name);
         }
+    }
+
+    fn has_card_in_hand(& self, card: &'player Card) -> bool{
+        match self.hand.get(card) {
+            Some(n) => *n > 0,
+            None => false,
+        }
+
+    }
+
+    pub fn trash_up_to_n_cards_in_hand(&mut self, opponent: &Player, kingdom: &mut Kingdom<'player>, mut n: u16) {
+        let mut done = false;
+        while n > 0 && !done {
+            done = true;
+            'priority: for trash_priority in self.player_priorities.trash_priority {
+                if self.has_card_in_hand(trash_priority.card) &&
+                (trash_priority.condition)(self, opponent, kingdom)
+                {
+                    self.trash_card_from_hand(kingdom, trash_priority.card, 1);
+                    n -= 1;
+                    done = false;
+                    break 'priority;
+                }
+            }
+        }
+    }
+
+    pub fn trash_card_from_hand(&mut self, kingdom: &mut Kingdom<'player>, card: &'player Card, n: u16) {
+        Player::remove_from_hashmap(&mut self.hand, card, n);
+        Player::remove_from_hashmap(&mut self.cards, card, n);
+
+        kingdom.add_card_to_trash(card, n);
+        if self.print_log {
+            println!("{} trashes {} {}s", self.name, n, card.name);
+        }
+    }
+
+    pub fn remove_from_hashmap(hashmap: &mut HashMap<&'player Card, u16>, card: &'player Card, n: u16) {
+        let count = hashmap.entry(card).or_insert(0);
+        if n > *count {
+            panic!(
+                "Attempting to remove {} {}s when only {} are there",
+                n, card.name, count
+            );
+        }
+        *count -= n;
     }
 
     pub fn cleanup(&mut self) {

@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 pub struct CardCondition<'a> {
     pub card: &'a Card,
-    pub condition: Box<dyn Send + Sync + Fn(&Player<'_>, &Player<'_>, &Kingdom<'_>) -> bool>,
+    pub condition: Box<dyn Send + Sync + Fn(&Player<'_>, &Player<'_>, &Kingdom) -> bool>,
 }
 
 #[derive(Serialize, Deserialize)]

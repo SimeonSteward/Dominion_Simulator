@@ -1,0 +1,17 @@
+[
+  {
+    "card": "estate",
+    "condition": "True"
+  },
+  {
+    "card": "copper",
+    "condition": {
+      "GreaterThan": {
+        "first": "CountCoin",
+        "second": {
+          "Int": 4
+        }
+      }
+    }
+  }
+]

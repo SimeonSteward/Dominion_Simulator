@@ -5,7 +5,7 @@ lazy_static! {
         name: "Village",
         cost: 3,
         card_type: CardType::Action,
-        play_action: |player, _| {
+        play_action: |player, _, _| {
             player.draw(1);
             player.actions += 2;
         },

@@ -2,9 +2,10 @@ use crate::card::{constants::*, Card};
 use crate::supply_pile::SupplyPile;
 use std::collections::HashMap;
 
-pub struct Kingdom<'a> {
-    pub supply_piles: HashMap<&'a Card, SupplyPile<'a>>,
+pub struct Kingdom<'kingdom> {
+    pub supply_piles: HashMap<&'kingdom Card, SupplyPile>,
     pub game_end: GameOver,
+    pub trash: HashMap<&'kingdom Card, u16>
 }
 
 #[derive(PartialEq)]
@@ -13,11 +14,12 @@ pub enum GameOver {
     NotOver(u8),
 }
 
-impl<'a> Kingdom<'a> {
+impl <'a>Kingdom<'a>{
     pub fn new() -> Self {
         Kingdom {
             supply_piles: HashMap::new(),
             game_end: GameOver::NotOver(3),
+            trash: HashMap::new(),
         }
     }
 
@@ -38,6 +40,7 @@ impl<'a> Kingdom<'a> {
         add_supply_pile!(self, base::smithy::SMITHY, 10);
         add_supply_pile!(self, base::village::VILLAGE, 10);
         add_supply_pile!(self, base::council_room::COUNCIL_ROOM, 10);
+        add_supply_pile!(self, base::chapel::CHAPEL, 10);
     }
 
     pub fn remove_from_supply(&mut self, card: &'a Card, n: u16) {
@@ -58,5 +61,10 @@ impl<'a> Kingdom<'a> {
                 }
             }
         }
+    }
+
+    pub fn add_card_to_trash(&mut self, card: &'a Card, n: u16){
+       let count = self.trash.entry(card).or_insert(0);
+        *count += n; 
     }
 }

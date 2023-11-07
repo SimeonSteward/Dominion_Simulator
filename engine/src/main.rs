@@ -23,8 +23,8 @@ fn run_game(
 ) -> GameResult {
     let mut kingdom = Kingdom::new();
     kingdom.initialize();
-    let mut player_1 = Player::new("Woodcutter", print_log, p1_priorities); //
-    let mut player_2 = Player::new("Adventurer", print_log, p2_priorities); //
+    let mut player_1 = Player::new(p1_priorities.name, print_log, p1_priorities); //
+    let mut player_2 = Player::new(p2_priorities.name, print_log, p2_priorities); //
     player_1.initialize(&mut kingdom);
     player_2.initialize(&mut kingdom);
     if !p1_is_first_player {
@@ -105,8 +105,10 @@ async fn multi_threaded_tokio(
 
     let elapsed_time = start_time.elapsed();
     println!(
-        "Wins: {}, Losses: {}, Ties: {}",
+        "{}: {}, {}: {}, Ties: {}",
+        p1_priorities.name,
         wins.load(std::sync::atomic::Ordering::Relaxed),
+        p2_priorities.name,
         losses.load(std::sync::atomic::Ordering::Relaxed),
         ties.load(std::sync::atomic::Ordering::Relaxed)
     );
@@ -114,26 +116,34 @@ async fn multi_threaded_tokio(
 }
 
 fn main() {
+    let p1_name = "chapel_money";
+    let p2_name = "big_money_ultimate";
     let action_play = core::strategy::get_priority_list("action_play_priority".to_owned())
         .expect("Error Loading Action Play priority:");
     let treasure_play = core::strategy::get_priority_list("treasure_play_priority".to_owned())
         .expect("Error Loading Treasure Play priority:");
-    let big_money = core::strategy::get_priority_list("big_money_ultimate".to_owned())
+    let trash_priority = core::strategy::get_priority_list("trash_priority".to_owned())
+        .expect("Error Loading Treasure Play priority:");
+    let p1_buy_priority = core::strategy::get_priority_list(p1_name.to_owned())
         .expect("Error Loading Action Play priority:");
-    let council_room_money = core::strategy::get_priority_list("council_room_money".to_owned())
+    let chapel_money = core::strategy::get_priority_list(p2_name.to_owned())
         .expect("Error Loading Action Play priority:");
     let p1_priorities = PlayerPriorities {
-        buy_priority: &big_money,
+        name: p1_name,
+        buy_priority: &p1_buy_priority,
         action_play_priority: &action_play,
         treasure_play_priority: &treasure_play,
+        trash_priority:&trash_priority,
     };
     let p2_priorities = PlayerPriorities {
-        buy_priority: &council_room_money,
+        name: p2_name,
+        buy_priority: &chapel_money,
         action_play_priority: &action_play,
         treasure_play_priority: &treasure_play,
+        trash_priority:&trash_priority,
     };
 
-    //run_game(true, true, &p1_priorities, &p2_priorities);
+    run_game(true, true, &p1_priorities, &p2_priorities);
 
-    multi_threaded_tokio(100000, &p1_priorities, &p2_priorities);
+    multi_threaded_tokio(10000, &p1_priorities, &p2_priorities);
 }

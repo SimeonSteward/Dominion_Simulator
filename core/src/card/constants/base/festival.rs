@@ -5,7 +5,7 @@ lazy_static! {
         name: "Festival",
         cost: 5,
         card_type: CardType::Action,
-        play_action: |player, _| {
+        play_action: |player, _, _| {
             player.actions += 2;
             player.coins += 2;
             player.buys += 1;
