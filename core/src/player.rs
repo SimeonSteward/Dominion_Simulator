@@ -1,6 +1,7 @@
 use crate::card::{constants::*, Card, CardType};
 use crate::kingdom::Kingdom;
 use crate::strategy::CardCondition;
+use rand::SeedableRng;
 use rand::seq::SliceRandom;
 use std::collections::HashMap;
 
@@ -105,7 +106,7 @@ impl<'player> Player<'player> {
             println!("{} shuffles their deck... ", self.abreviated_name);
         }
         self.deck.append(&mut self.discard);
-        self.deck.shuffle(&mut rand::thread_rng());
+        self.deck.shuffle(&mut rand::rngs::SmallRng::from_entropy());
     }
 
     pub fn add_to_discard(&mut self, card: &'player Card, n: u16) {
